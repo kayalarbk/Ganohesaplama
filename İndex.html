@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marmara Üniversitesi EEM Ortalama Hesaplama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-12 text-slate-800">
+
+    <header class="bg-slate-900 border-b border-blue-900 text-white py-10 px-4 shadow-sm text-center">
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Marmara Üniversitesi Mühendislik Fakültesi</h1>
+        <p class="text-slate-300 mt-2 text-sm md:text-base font-medium">Elektrik-Elektronik Mühendisliği AGNO / GANO Hesaplama</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <label class="block text-sm font-bold text-slate-700 mb-3">Hesaplamak İstediğiniz Dönemi Seçiniz:</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center" id="term-tabs">
+                    </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
+                    <h2 class="font-bold text-sm md:text-base" id="current-term-title">1. Dönem Dersleri</h2>
+                    <button onclick="addNewRow()" class="bg-white hover:bg-slate-100 text-slate-900 text-xs px-3 py-2 rounded-lg transition font-bold shadow-sm">
+                        + Farklı Ders Ekle
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ders Kodu ve Adı</th>
+                                <th class="px-5 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24">AKTS</th>
+                                <th class="px-5 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-36">Harf Notu</th>
+                                <th class="px-5 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-16">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="course-rows-container" class="bg-white divide-y divide-slate-200">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-2">Geçmiş Bilgileri <span class="text-xs font-normal text-slate-400">(Opsiyonel)</span></h2>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Önceki Dönemlerin GANO'su</label>
+                    <input type="number" id="past-gano" step="0.01" placeholder="Örn: 2.85" oninput="calculateAll()" class="w-full rounded-lg border border-slate-300 shadow-sm p-2.5 text-sm focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Önceki Dönemlerin Toplam AKTS'si</label>
+                    <input type="number" id="past-akts" placeholder="Örn: 60" oninput="calculateAll()" class="w-full rounded-lg border border-slate-300 shadow-sm p-2.5 text-sm focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition">
+                </div>
+            </div>
+
+            <div class="bg-slate-900 text-white p-6 rounded-xl shadow-md space-y-6 border border-slate-800">
+                <h2 class="text-base font-bold border-b border-slate-800 pb-2 tracking-wide uppercase text-slate-300">Hesaplama Sonuçları</h2>
+                
+                <div class="flex justify-between items-center bg-slate-850 p-3 rounded-lg bg-opacity-40">
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Seçili Dönem AKTS</p>
+                        <p id="result-term-akts" class="text-xl font-bold mt-0.5">0</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Dönem Ortalaması (YANO)</p>
+                        <p id="result-yano" class="text-3xl font-black text-white mt-0.5">0.00</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Toplam Kümülatif AKTS</p>
+                        <p id="result-total-akts" class="text-xl font-bold mt-0.5">0</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-300 font-bold uppercase tracking-wider">Yeni Güncel GANO</p>
+                        <p id="result-gano" class="text-3xl font-black text-blue-400 mt-0.5">0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-slate-400 font-medium">
+                Marmara Üniversitesi 4.00'lük AKTS Not Dönüşüm Sistemi Esas Alınmıştır.
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Not Katsayıları
+        const GRADE_SCALE = {
+            'AA': 4.00, 'BA': 3.50, 'BB': 3.00, 'CB': 2.50,
+            'CC': 2.00, 'DC': 1.50, 'DD': 1.00, 'FD': 0.50, 'FF': 0.00
+        };
+
+        // Müfredat Bilgisi
+        const syllabus = {
+            1: [
+                { code: "CHEM1007", name: "Basic Chemistry", akts: 6 },
+                { code: "CSE1145", name: "Introduction to Computer Programming", akts: 5 },
+                { code: "ENG1001", name: "Academic Presentation Skills for Engineers", akts: 3 },
+                { code: "ISG121", name: "İş Sağlığı ve Güvenliği I", akts: 2 },
+                { code: "MATH1001", name: "Calculus I", akts: 6 },
+                { code: "PHYS1101", name: "Physics I", akts: 4 },
+                { code: "PHYS1103", name: "Physics Lab I", akts: 2 },
+                { code: "TRD121", name: "Türk Dili I", akts: 2 }
+            ],
+            2: [
+                { code: "EE1004", name: "Object-Oriented Programming", akts: 7 },
+                { code: "EE1100", name: "Introduction to Electrical Engineering", akts: 3 },
+                { code: "ISG122", name: "İş Sağlığı ve Güvenliği II", akts: 2 },
+                { code: "MATH1002", name: "Calculus II", akts: 6 },
+                { code: "MATH2056", name: "Linear Algebra", akts: 4 },
+                { code: "PHYS1102", name: "Physics II", akts: 4 },
+                { code: "PHYS1104", name: "Physics Lab II", akts: 2 },
+                { code: "TRD122", name: "Türk Dili II", akts: 2 }
+            ],
+            3: [
+                { code: "EE2001", name: "Electrical Circuits I", akts: 7 },
+                { code: "EE2003", name: "Digital Design", akts: 7 },
+                { code: "MATH2055", name: "Differential Equations", akts: 4 },
+                { code: "MATH2057", name: "Discrete Mathematics", akts: 5 },
+                { code: "MSE2072", name: "Introduction to Materials Science", akts: 4 },
+                { code: "NTE_1", name: "Non-Technical Elective - 1", akts: 3 }
+            ],
+            4: [
+                { code: "EE2002", name: "Electrical Circuits II", akts: 7 },
+                { code: "EE2004", name: "Microprocessor Systems", akts: 6 },
+                { code: "EE3011", name: "Electronics I", akts: 7 },
+                { code: "MATH2052", name: "Engineering Mathematics", akts: 6 },
+                { code: "MATH2059", name: "Numerical Methods", akts: 4 }
+            ],
+            5: [
+                { code: "EE3000", name: "Summer Practice I", akts: 10 },
+                { code: "EE3012", name: "Electronics II", akts: 7 },
+                { code: "EE3014", name: "Energy Conversion", akts: 7 },
+                { code: "EE3016", name: "Fundamentals of Electromagnetics", akts: 5 },
+                { code: "EE3061", name: "Signals and Systems", akts: 7 },
+                { code: "STAT2056", name: "Probability and Random Variables", akts: 4 }
+            ],
+            6: [
+                { code: "EE3072", name: "Dynamic Systems and Control", akts: 7 },
+                { code: "EE3082", name: "Communication Engineering", akts: 7 },
+                { code: "EE4002", name: "Introduction to Digital Signal Processing", akts: 6 },
+                { code: "EE4051", name: "Electromagnetic Waves", akts: 5 },
+                { code: "EE4077", name: "Fundamentals of Machine Learning", akts: 5 }
+            ],
+            7: [
+                { code: "ATA121", name: "Atatürk İlkeleri ve İnkılap Tarihi I", akts: 2 },
+                { code: "ECON2004", name: "Engineering Economy", akts: 4 },
+                { code: "EE4000", name: "Summer Practice II", akts: 10 },
+                { code: "EE4297", name: "Engineering Project I", akts: 6 },
+                { code: "NTE_2", name: "Non-Technical Elective - 2", akts: 3 },
+                { code: "TE-1,2,3", name: "Technical Elective - 1-2-3", akts: 15 }
+            ],
+            8: [
+                { code: "ATA122", name: "Atatürk İlkeleri ve İnkılap Tarihi II", akts: 2 },
+                { code: "EE4298", name: "Engineering Project II", akts: 5 },
+                { code: "ENG-FTE", name: "Faculty Technical Electives", akts: 5 },
+                { code: "ENG-UE", name: "University Elective", akts: 3 },
+                { code: "TE-4,5,6", name: "Technical Elective - 4-5-6", akts: 15 }
+            ]
+        };
+
+        let currentTerm = 1;
+        let activeCourses = JSON.parse(JSON.stringify(syllabus[currentTerm]));
+
+        window.onload = function() {
+            renderTabs();
+            loadTerm(1);
+        };
+
+        function renderTabs() {
+            const container = document.getElementById('term-tabs');
+            container.innerHTML = '';
+            for (let i = 1; i <= 8; i++) {
+                const btn = document.createElement('button');
+                btn.className = `p-2.5 text-xs md:text-sm font-bold rounded-xl transition-all duration-150 border ${i === currentTerm ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100 border-slate-200'}`;
+                btn.innerText = `${i}. Dönem`;
+                btn.onclick = () => loadTerm(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function loadTerm(termNumber) {
+            currentTerm = termNumber;
+            document.getElementById('current-term-title').innerText = `${termNumber}. Dönem Dersleri`;
+            activeCourses = JSON.parse(JSON.stringify(syllabus[termNumber]));
+            renderTabs();
+            renderCourses();
+        }
+
+        function renderCourses() {
+            const container = document.getElementById('course-rows-container');
+            container.innerHTML = '';
+
+            activeCourses.forEach((course, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition duration-100";
+                
+                let optionsHtml = '<option value="">Seçilmedi</option>';
+                Object.keys(GRADE_SCALE).forEach(g => {
+                    optionsHtml += `<option value="${g}" ${course.grade === g ? 'selected' : ''}>${g}</option>`;
+                });
+
+                tr.innerHTML = `
+                    <td class="px-5 py-3.5">
+                        <div class="font-bold text-slate-900 text-sm tracking-wide">${course.code || 'ÖZEL'}</div>
+                        <div class="text-xs text-slate-500 font-medium mt-0.5">${course.name}</div>
+                    </td>
+                    <td class="px-5 py-3.5 text-center">
+                        <input type="number" value="${course.akts}" onchange="updateAkts(${index}, this.value)" class="w-16 border border-slate-200 rounded-lg text-center p-1.5 text-sm font-semibold bg-slate-50 focus:bg-white focus:border-slate-900 outline-none transition">
+                    </td>
+                    <td class="px-5 py-3.5 text-center">
+                        <select onchange="updateGrade(${index}, this.value)" class="w-full border border-slate-200 rounded-lg p-1.5 text-sm font-bold bg-white text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition">
+                            ${optionsHtml}
+                        </select>
+                    </td>
+                    <td class="px-5 py-3.5 text-center">
+                        <button onclick="deleteRow(${index})" class="text-red-500 hover:text-red-700 text-xs font-bold uppercase tracking-wider">Sil</button>
+                    </td>
+                `;
+                container.appendChild(tr);
+            });
+
+            calculateAll();
+        }
+
+        function updateGrade(index, val) {
+            activeCourses[index].grade = val;
+            calculateAll();
+        }
+
+        function updateAkts(index, val) {
+            activeCourses[index].akts = parseFloat(val) || 0;
+            calculateAll();
+        }
+
+        function deleteRow(index) {
+            activeCourses.splice(index, 1);
+            renderCourses();
+        }
+
+        function addNewRow() {
+            activeCourses.push({ code: 'ÖZEL', name: 'Seçmeli / Alttan Alınan Ders', akts: 5, grade: '' });
+            renderCourses();
+        }
+
+        function calculateAll() {
+            let termTotalAkts = 0;
+            let termWeightedScore = 0;
+
+            activeCourses.forEach(course => {
+                if (course.grade && GRADE_SCALE[course.grade] !== undefined) {
+                    const akts = parseFloat(course.akts) || 0;
+                    const point = GRADE_SCALE[course.grade];
+                    termTotalAkts += akts;
+                    termWeightedScore += (akts * point);
+                }
+            });
+
+            const yano = termTotalAkts === 0 ? 0 : (termWeightedScore / termTotalAkts);
+            
+            document.getElementById('result-term-akts').innerText = termTotalAkts;
+            document.getElementById('result-yano').innerText = yano.toFixed(2);
+
+            const pastGano = parseFloat(document.getElementById('past-gano').value) || 0;
+            const pastAkts = parseFloat(document.getElementById('past-akts').value) || 0;
+
+            const finalTotalAkts = pastAkts + termTotalAkts;
+            const finalTotalScore = (pastGano * pastAkts) + termWeightedScore;
+
+            const gano = finalTotalAkts === 0 ? 0 : (finalTotalScore / finalTotalAkts);
+
+            document.getElementById('result-total-akts').innerText = finalTotalAkts;
+            document.getElementById('result-gano').innerText = gano.toFixed(2);
+        }
+    </script>
+</body>
+</html>
