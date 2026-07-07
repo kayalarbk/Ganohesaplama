@@ -33,7 +33,7 @@
 
   header{
     background:linear-gradient(160deg,var(--navy-950),var(--navy-900) 60%,var(--navy-700));
-    color:#fff; padding:2.2rem 1.25rem 2.6rem; text-align:center;
+    color:#fff; padding:1.8rem 1.25rem 1.6rem; text-align:center;
     position:relative; overflow:hidden;
   }
   header::after{
@@ -44,7 +44,21 @@
   header h1{ margin:0; font-size:1.5rem; font-weight:700; letter-spacing:-0.01em; }
   header p{ margin:.5rem 0 0; color:#b9c4e0; font-size:.9rem; }
 
-  main{ max-width:1100px; margin:-1.4rem auto 3rem; padding:0 1rem; }
+  .sticky-gano{
+    position:sticky; top:0; z-index:50;
+    background:#fff; border-bottom:1px solid var(--border);
+    box-shadow:0 4px 14px -8px rgba(15,23,42,.25);
+    padding:.55rem 1rem; display:flex; justify-content:center; align-items:baseline; gap:.5rem;
+  }
+  .sticky-gano .cap{ font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
+  .sticky-gano .val{ font-size:1.15rem; font-weight:700; color:var(--navy-900); }
+  .sticky-gano .sep{ color:var(--border); }
+  .sticky-gano .val.delta{ font-size:.85rem; padding:.1rem .5rem; border-radius:999px; font-weight:700; }
+  .sticky-gano .val.delta.up{ background:var(--up-bg); color:var(--up); }
+  .sticky-gano .val.delta.down{ background:var(--down-bg); color:var(--down); }
+  .sticky-gano .val.delta.flat{ background:#f1f5f9; color:var(--muted); }
+
+  main{ max-width:1100px; margin:0 auto 3rem; padding:1.6rem 1rem 0; }
 
   .tabbar{
     display:flex; gap:.4rem; background:var(--navy-900); padding:.35rem;
@@ -162,6 +176,13 @@
   <p>Alttan dersi yükseltirsen ortalamanın ne kadar değişeceğini gör</p>
 </header>
 
+<div class="sticky-gano">
+  <span class="cap">Güncel GANO</span><span class="val mono" id="sticky-current">0.00</span>
+  <span class="sep">/</span>
+  <span class="cap">Simüle</span><span class="val mono" id="sticky-sim">0.00</span>
+  <span class="val delta flat mono" id="sticky-delta">—</span>
+</div>
+
 <main>
   <div class="tabbar">
     <button class="tab-btn active" data-tab="transkript">Transkriptim</button>
@@ -236,7 +257,7 @@
     <div class="card">
       <div class="add-row">
         <div class="field">
-          <label>Yükseltilecek ders (not girilmiş dersler listede görünmez)</label>
+          <label>Yükseltilecek ders (yalnızca DC ve altı notlar)</label>
           <select id="sim-course-select"></select>
         </div>
         <div class="field" style="flex:0 0 130px;">
@@ -412,15 +433,17 @@ document.getElementById('past-gano').addEventListener('input', e=>{ baseline.gan
 document.getElementById('past-akts').addEventListener('input', e=>{ baseline.akts = e.target.value; saveBaseline(); recalcTranscript(); });
 
 // ---------- Simülasyon tab ----------
+const RETAKEABLE_GRADES = ['DC','DD','FD','FF'];
+
 function takenCourses(){
-  return ALL_COURSES.filter(c => transcript[c.code] && transcript[c.code].grade);
+  return ALL_COURSES.filter(c => transcript[c.code] && RETAKEABLE_GRADES.includes(transcript[c.code].grade));
 }
 
 function renderSimSelectors(){
   const courseSel = document.getElementById('sim-course-select');
   const taken = takenCourses().filter(c => !simOverrides[c.code]);
   if(taken.length === 0){
-    courseSel.innerHTML = '<option value="">Not girilmiş ders yok</option>';
+    courseSel.innerHTML = '<option value="">DC ve altı ders yok</option>';
     document.getElementById('sim-add-btn').disabled = true;
   } else {
     document.getElementById('sim-add-btn').disabled = false;
@@ -483,6 +506,20 @@ function recalcSimulation(){
     badge.className = 'delta-badge up'; badge.textContent = `▲ +${delta.toFixed(2)} GANO artışı`;
   } else {
     badge.className = 'delta-badge down'; badge.textContent = `▼ ${delta.toFixed(2)} GANO düşüşü`;
+  }
+  updateStickyBar(current.gano, simulated.gano, delta);
+}
+
+function updateStickyBar(current, simulated, delta){
+  document.getElementById('sticky-current').textContent = current.toFixed(2);
+  document.getElementById('sticky-sim').textContent = simulated.toFixed(2);
+  const el = document.getElementById('sticky-delta');
+  if(Math.abs(delta) < 0.001){
+    el.className = 'val delta flat mono'; el.textContent = '—';
+  } else if(delta > 0){
+    el.className = 'val delta up mono'; el.textContent = `+${delta.toFixed(2)}`;
+  } else {
+    el.className = 'val delta down mono'; el.textContent = delta.toFixed(2);
   }
 }
 
