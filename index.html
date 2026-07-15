@@ -60,6 +60,14 @@
 
   main{ max-width:1100px; margin:0 auto 3rem; padding:1.6rem 1rem 0; }
 
+  .dept-select-wrap{ max-width:520px; margin:0 auto 1rem; }
+  .dept-select-wrap label{ display:block; font-size:.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.35rem; text-align:center; }
+  #dept-select{
+    width:100%; border:1px solid var(--border); border-radius:12px; padding:.7rem .8rem;
+    font-size:.9rem; font-weight:600; background:#fff; color:var(--navy-900); text-align:center;
+  }
+  #dept-select:focus{ outline:2px solid var(--navy-500); outline-offset:1px; }
+
   .tabbar{
     display:flex; gap:.4rem; background:var(--navy-900); padding:.35rem;
     border-radius:14px; max-width:520px; margin:0 auto 1.6rem; box-shadow:0 10px 30px -12px rgba(15,23,42,.35);
@@ -167,13 +175,61 @@
   .empty-state strong{ display:block; color:var(--navy-900); margin-bottom:.3rem; font-size:.95rem; }
 
   footer{ text-align:center; color:var(--muted); font-size:.72rem; padding-bottom:2rem; }
+
+  /* Threshold indicator */
+  .threshold-wrap{ margin-top:1rem; }
+  .threshold-track{ position:relative; height:8px; background:rgba(255,255,255,.12); border-radius:999px; }
+  .threshold-fill{ position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,#3b5bab,#7fb2ff); border-radius:999px; transition:width .3s; }
+  .threshold-mark{ position:absolute; top:-3px; width:2px; height:14px; background:rgba(255,255,255,.45); }
+  .threshold-labels{ display:flex; justify-content:space-between; font-size:.6rem; color:#9db0d8; margin-top:.4rem; }
+  .threshold-status{ font-size:.72rem; margin-top:.5rem; color:#c9d6f2; }
+  .threshold-status b{ color:#7fb2ff; }
+
+  /* Term chip badge */
+  .chip-badge{ font-size:.62rem; font-weight:700; margin-left:.3rem; opacity:.75; }
+  .chip-badge.done{ color:#4ade80; }
+  .term-chip.active .chip-badge.done{ color:#4ade80; }
+
+  /* Suggestions */
+  .suggest-card{ margin-top:1.4rem; }
+  .suggest-card .head{ padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem; }
+  .suggest-card .head h3{ margin:0; font-size:.85rem; color:var(--navy-900); }
+  .suggest-card .head .sub{ font-size:.72rem; color:var(--muted); }
+  .suggest-item{ display:flex; align-items:center; gap:.8rem; padding:.7rem 1.25rem; border-bottom:1px solid var(--border); font-size:.83rem; }
+  .suggest-item:last-child{ border-bottom:none; }
+  .suggest-rank{ width:24px; height:24px; border-radius:50%; background:var(--navy-900); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:700; flex-shrink:0; }
+  .suggest-info{ flex:1; }
+  .suggest-meta{ font-size:.7rem; color:var(--muted); }
+  .suggest-gain{ font-weight:700; color:var(--up); font-size:.85rem; white-space:nowrap; }
+  .btn-mini{ border:1px solid var(--border); background:#fff; color:var(--navy-900); border-radius:8px; padding:.3rem .7rem; font-size:.72rem; font-weight:600; cursor:pointer; }
+  .btn-mini:hover{ border-color:var(--navy-500); }
+
+  /* Target mode */
+  .target-row{ display:flex; gap:.6rem; align-items:flex-end; padding:1rem 1.25rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .target-row .field{ flex:0 0 140px; margin-bottom:0; }
+  .target-result{ padding:1rem 1.25rem; font-size:.83rem; }
+  .target-result .plan-item{ display:flex; align-items:center; gap:.5rem; padding:.35rem 0; }
+  .target-result .ok{ color:var(--up); font-weight:700; }
+  .target-result .fail{ color:var(--down); font-weight:600; }
+
+  /* Chart */
+  .chart-card{ padding:1.1rem 1.25rem 1.25rem; margin-top:1.4rem; }
+  .chart-card h3{ margin:0 0 .8rem; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  #gano-chart{ width:100%; height:150px; display:block; }
+
+  /* Data buttons */
+  .data-actions{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .data-actions button{ flex:1; min-width:100px; border:1px solid var(--border); background:#fff; color:var(--navy-900); border-radius:10px; padding:.5rem; font-size:.75rem; font-weight:600; cursor:pointer; font-family:'Space Grotesk',sans-serif; }
+  .data-actions button:hover{ border-color:var(--navy-500); }
+  .data-actions button.danger{ color:var(--down); }
+  .data-actions button.danger:hover{ border-color:var(--down); }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Marmara EEM — GANO Simülatörü</h1>
-  <p>Alttan dersi yükseltirsen ortalamanın ne kadar değişeceğini gör</p>
+  <h1 id="header-title">Marmara Mühendislik — GANO Simülatörü</h1>
+  <p id="header-sub">Alttan dersi yükseltirsen ortalamanın ne kadar değişeceğini gör</p>
 </header>
 
 <div class="sticky-gano">
@@ -184,6 +240,11 @@
 </div>
 
 <main>
+  <div class="dept-select-wrap">
+    <label>Bölüm</label>
+    <select id="dept-select"></select>
+  </div>
+
   <div class="tabbar">
     <button class="tab-btn active" data-tab="transkript">Transkriptim</button>
     <button class="tab-btn" data-tab="simulasyon">Yükseltme Simülasyonu</button>
@@ -231,6 +292,28 @@
             <div><div class="stat-label">Toplam AKTS</div><div class="stat-val mono" id="r-total-akts">0</div></div>
             <div style="text-align:right;"><div class="stat-label">Güncel GANO</div><div class="stat-val big mono" id="r-gano">0.00</div></div>
           </div>
+          <div class="threshold-wrap">
+            <div class="threshold-track">
+              <div class="threshold-fill" id="th-fill" style="width:0%"></div>
+              <div class="threshold-mark" style="left:45%"></div>
+              <div class="threshold-mark" style="left:75%"></div>
+              <div class="threshold-mark" style="left:87.5%"></div>
+            </div>
+            <div class="threshold-labels"><span>0</span><span>1.80</span><span>3.00</span><span>3.50</span><span>4.00</span></div>
+            <div class="threshold-status" id="th-status"></div>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <h3>Dönemlere Göre Gelişim</h3>
+          <canvas id="gano-chart"></canvas>
+        </div>
+
+        <div class="data-actions">
+          <button id="btn-export">Yedeği İndir</button>
+          <button id="btn-import">Yedek Yükle</button>
+          <button class="danger" id="btn-reset">Sıfırla</button>
+          <input type="file" id="import-file" accept=".json" style="display:none">
         </div>
       </div>
     </div>
@@ -272,70 +355,385 @@
         Önce Transkriptim sekmesinden aldığın dersleri işle, sonra buradan hangi dersi hangi nota yükseltirsen ortalamanın nasıl değişeceğini canlı gör.
       </div>
     </div>
+
+    <div class="card suggest-card">
+      <div class="head">
+        <h3>🎯 Hedef GANO Planlayıcı</h3>
+        <span class="sub">Hedefini gir, hangi dersleri yükseltmen gerektiğini otomatik hesaplayalım</span>
+      </div>
+      <div class="target-row">
+        <div class="field">
+          <label>Hedef GANO</label>
+          <input type="number" id="target-gano" step="0.01" min="0" max="4" placeholder="Örn: 3.00">
+        </div>
+        <button class="btn-primary" id="target-btn">Planla</button>
+      </div>
+      <div class="target-result" id="target-result" style="display:none;"></div>
+    </div>
+
+    <div class="card suggest-card">
+      <div class="head">
+        <h3>💡 En Verimli Yükseltmeler</h3>
+        <span class="sub">AA'ya çıkarıldığında GANO'ya en çok katkı yapan dersler (etkiye göre sıralı)</span>
+      </div>
+      <div id="suggest-list"></div>
+      <div class="empty-state" id="suggest-empty">Öneri için önce DC ve altı notlu ders girmen gerekiyor.</div>
+    </div>
   </section>
 </main>
 
-<footer>Marmara Üniversitesi 4.00'lük AKTS not dönüşüm sistemi esas alınmıştır. Tekrar edilen derste sadece en güncel not sayılır.</footer>
+<footer>Marmara Üniversitesi 4.00'lük AKTS not dönüşüm sistemi esas alınmıştır. Tekrar edilen derste sadece en güncel not sayılır.<br>Ders listeleri ve AKTS değerleri bilgilendirme amaçlıdır; güncel müfredat için bölüm sayfasını kontrol et. AKTS değerlerini tablodan düzenleyebilirsin.</footer>
 
 <script>
 const GRADE_SCALE = { 'AA':4.00,'BA':3.50,'BB':3.00,'CB':2.50,'CC':2.00,'DC':1.50,'DD':1.00,'FD':0.50,'FF':0.00 };
 const GRADES = Object.keys(GRADE_SCALE);
 
-const syllabus = {
-  1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
-     {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
-     {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
-     {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
-  2:[{code:"EE1004",name:"Object-Oriented Programming",akts:7},{code:"EE1100",name:"Introduction to Electrical Engineering",akts:3},
-     {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
-     {code:"MATH2056",name:"Linear Algebra",akts:4},{code:"PHYS1102",name:"Physics II",akts:4},
-     {code:"PHYS1104",name:"Physics Lab II",akts:2},{code:"TRD122",name:"Türk Dili II",akts:2}],
-  3:[{code:"EE2001",name:"Electrical Circuits I",akts:7},{code:"EE2003",name:"Digital Design",akts:7},
-     {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MATH2057",name:"Discrete Mathematics",akts:5},
-     {code:"MSE2072",name:"Introduction to Materials Science",akts:4},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
-  4:[{code:"EE2002",name:"Electrical Circuits II",akts:7},{code:"EE2004",name:"Microprocessor Systems",akts:6},
-     {code:"EE3011",name:"Electronics I",akts:7},{code:"MATH2052",name:"Engineering Mathematics",akts:6},
-     {code:"MATH2059",name:"Numerical Methods",akts:4}],
-  5:[{code:"EE3000",name:"Summer Practice I",akts:10},{code:"EE3012",name:"Electronics II",akts:7},
-     {code:"EE3014",name:"Energy Conversion",akts:7},{code:"EE3016",name:"Fundamentals of Electromagnetics",akts:5},
-     {code:"EE3061",name:"Signals and Systems",akts:7},{code:"STAT2056",name:"Probability and Random Variables",akts:4}],
-  6:[{code:"EE3072",name:"Dynamic Systems and Control",akts:7},{code:"EE3082",name:"Communication Engineering",akts:7},
-     {code:"EE4002",name:"Introduction to Digital Signal Processing",akts:6},{code:"EE4051",name:"Electromagnetic Waves",akts:5},
-     {code:"EE4077",name:"Fundamentals of Machine Learning",akts:5}],
-  7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
-     {code:"EE4000",name:"Summer Practice II",akts:10},{code:"EE4297",name:"Engineering Project I",akts:6},
-     {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3},{code:"TE1",name:"Technical Elective - 1",akts:5},
-     {code:"TE2",name:"Technical Elective - 2",akts:5},{code:"TE3",name:"Technical Elective - 3",akts:5}],
-  8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"EE4298",name:"Engineering Project II",akts:5},
-     {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"ENG_UE",name:"University Elective",akts:3},
-     {code:"TE4",name:"Technical Elective - 4",akts:5},{code:"TE5",name:"Technical Elective - 5",akts:5},
-     {code:"TE6",name:"Technical Elective - 6",akts:5}]
+const DEPARTMENTS = {
+  eem: {
+    name: "Elektrik-Elektronik Mühendisliği",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"EE1004",name:"Object-Oriented Programming",akts:7},{code:"EE1100",name:"Introduction to Electrical Engineering",akts:3},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"MATH2056",name:"Linear Algebra",akts:4},{code:"PHYS1102",name:"Physics II",akts:4},
+         {code:"PHYS1104",name:"Physics Lab II",akts:2},{code:"TRD122",name:"Türk Dili II",akts:2}],
+      3:[{code:"EE2001",name:"Electrical Circuits I",akts:7},{code:"EE2003",name:"Digital Design",akts:7},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MATH2057",name:"Discrete Mathematics",akts:5},
+         {code:"MSE2072",name:"Introduction to Materials Science",akts:4},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      4:[{code:"EE2002",name:"Electrical Circuits II",akts:7},{code:"EE2004",name:"Microprocessor Systems",akts:6},
+         {code:"EE3011",name:"Electronics I",akts:7},{code:"MATH2052",name:"Engineering Mathematics",akts:6},
+         {code:"MATH2059",name:"Numerical Methods",akts:4}],
+      5:[{code:"EE3000",name:"Summer Practice I",akts:10},{code:"EE3012",name:"Electronics II",akts:7},
+         {code:"EE3014",name:"Energy Conversion",akts:7},{code:"EE3016",name:"Fundamentals of Electromagnetics",akts:5},
+         {code:"EE3061",name:"Signals and Systems",akts:7},{code:"STAT2056",name:"Probability and Random Variables",akts:4}],
+      6:[{code:"EE3072",name:"Dynamic Systems and Control",akts:7},{code:"EE3082",name:"Communication Engineering",akts:7},
+         {code:"EE4002",name:"Introduction to Digital Signal Processing",akts:6},{code:"EE4051",name:"Electromagnetic Waves",akts:5},
+         {code:"EE4077",name:"Fundamentals of Machine Learning",akts:5}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
+         {code:"EE4000",name:"Summer Practice II",akts:10},{code:"EE4297",name:"Engineering Project I",akts:6},
+         {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3},{code:"TE1",name:"Technical Elective - 1",akts:5},
+         {code:"TE2",name:"Technical Elective - 2",akts:5},{code:"TE3",name:"Technical Elective - 3",akts:5}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"EE4298",name:"Engineering Project II",akts:5},
+         {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"ENG_UE",name:"University Elective",akts:3},
+         {code:"TE4",name:"Technical Elective - 4",akts:5},{code:"TE5",name:"Technical Elective - 5",akts:5},
+         {code:"TE6",name:"Technical Elective - 6",akts:5}]
+    }
+  },
+  cse: {
+    name: "Bilgisayar Mühendisliği",
+    syllabus: {
+      1:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"MBG1201",name:"Introduction to Modern Biology",akts:5},
+         {code:"CSE1200",name:"Introduction to Computer Engineering",akts:4},{code:"CSE1241",name:"Computer Programming I",akts:6},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"CSE1242",name:"Computer Programming II",akts:6},
+         {code:"MATH1002",name:"Calculus II",akts:6},{code:"MATH2256",name:"Linear Algebra for Computer Engineering",akts:5},
+         {code:"PHYS1102",name:"Physics II",akts:4},{code:"PHYS1104",name:"Physics Lab II",akts:2},
+         {code:"TRD122",name:"Türk Dili II",akts:2},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      3:[{code:"CSE2023",name:"Discrete Computational Structures",akts:6},{code:"CSE2225",name:"Data Structures",akts:7},
+         {code:"ECON2004",name:"Engineering Economy",akts:4},{code:"EE2031",name:"Electric Circuits",akts:5},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MATH2059",name:"Numerical Methods",akts:4}],
+      4:[{code:"CSE2246",name:"Analysis of Algorithms",akts:6},{code:"CSE2138",name:"Systems Programming",akts:7},
+         {code:"CSE2260",name:"Principles of Programming Languages",akts:6},{code:"EE2032",name:"Electronics",akts:5},
+         {code:"STAT2253",name:"Introduction to Probability and Statistics",akts:5}],
+      5:[{code:"CSE3000",name:"Summer Practice I",akts:10},{code:"CSE3215",name:"Digital Logic Design",akts:6},
+         {code:"CSE3033",name:"Operating Systems",akts:7},{code:"CSE3055",name:"Database Systems",akts:7},
+         {code:"CSE3063",name:"Object Oriented Software Design",akts:5},{code:"IE3081",name:"Modeling and Discrete Simulation",akts:4}],
+      6:[{code:"CSE3038",name:"Computer Organization",akts:7},{code:"CSE3044",name:"Software Engineering",akts:7},
+         {code:"CSE3048",name:"Introduction to Signals and Systems",akts:5},{code:"CSE3264",name:"Formal Languages and Automata",akts:5},
+         {code:"IE3235",name:"Operations Research",akts:4},{code:"COM2202",name:"Technical Communication and Entrepreneurship",akts:2}],
+      7:[{code:"CSE4000",name:"Summer Practice II",akts:10},{code:"CSE4074",name:"Computer Networks",akts:5},
+         {code:"CSE4219",name:"Principles of Embedded System Design",akts:6},{code:"CSE4297",name:"Engineering Project I",akts:5},
+         {code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},{code:"CSE4288",name:"Introduction to Machine Learning",akts:5},
+         {code:"ENG_UE",name:"University Elective",akts:3},{code:"TE1",name:"Technical Elective - 1",akts:5}],
+      8:[{code:"CSE4298",name:"Engineering Project II",akts:5},{code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},
+         {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"NTE_2",name:"Non-Technical Elective - 2",akts:3},
+         {code:"TE2",name:"Technical Elective - 2",akts:5},{code:"TE3",name:"Technical Elective - 3",akts:5},
+         {code:"TE4",name:"Technical Elective - 4",akts:5}]
+    }
+  },
+  ie: {
+    name: "Endüstri Mühendisliği",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"IE1002",name:"Introduction to Industrial Engineering",akts:4},{code:"CSE1146",name:"Computer Programming",akts:5},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"MATH2056",name:"Linear Algebra",akts:4},{code:"PHYS1102",name:"Physics II",akts:4},
+         {code:"PHYS1104",name:"Physics Lab II",akts:2},{code:"TRD122",name:"Türk Dili II",akts:2}],
+      3:[{code:"IE2001",name:"Engineering Statistics I",akts:6},{code:"IE2011",name:"Operations Research I",akts:6},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"ECON2001",name:"Economics for Engineers",akts:4},
+         {code:"MSE2072",name:"Introduction to Materials Science",akts:4},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      4:[{code:"IE2002",name:"Engineering Statistics II",akts:6},{code:"IE2012",name:"Operations Research II",akts:6},
+         {code:"IE2022",name:"Manufacturing Processes",akts:5},{code:"EE2031",name:"Electric Circuits",akts:5},
+         {code:"ECON2004",name:"Engineering Economy",akts:4}],
+      5:[{code:"IE3000",name:"Summer Practice I",akts:10},{code:"IE3013",name:"Production Planning I",akts:6},
+         {code:"IE3021",name:"Work Study and Ergonomics",akts:5},{code:"IE3031",name:"Simulation",akts:6},
+         {code:"IE3041",name:"Quality Planning and Control",akts:5}],
+      6:[{code:"IE3014",name:"Production Planning II",akts:6},{code:"IE3052",name:"Facilities Planning and Design",akts:6},
+         {code:"IE3062",name:"Information Systems",akts:5},{code:"IE3072",name:"Supply Chain Management",akts:5},
+         {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"IE4000",name:"Summer Practice II",akts:10},
+         {code:"IE4297",name:"Engineering Project I",akts:6},{code:"TE1",name:"Technical Elective - 1",akts:5},
+         {code:"TE2",name:"Technical Elective - 2",akts:5},{code:"NTE_3",name:"Non-Technical Elective - 3",akts:3}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"IE4298",name:"Engineering Project II",akts:5},
+         {code:"TE3",name:"Technical Elective - 3",akts:5},{code:"TE4",name:"Technical Elective - 4",akts:5},
+         {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"ENG_UE",name:"University Elective",akts:3}]
+    }
+  },
+  me: {
+    name: "Makine Mühendisliği",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"ME1002",name:"Engineering Drawing",akts:5},{code:"ME1100",name:"Introduction to Mechanical Engineering",akts:3},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"MATH2056",name:"Linear Algebra",akts:4},{code:"PHYS1102",name:"Physics II",akts:4},
+         {code:"PHYS1104",name:"Physics Lab II",akts:2},{code:"TRD122",name:"Türk Dili II",akts:2}],
+      3:[{code:"ME2001",name:"Statics",akts:6},{code:"ME2011",name:"Thermodynamics I",akts:6},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MSE2072",name:"Introduction to Materials Science",akts:4},
+         {code:"ME2021",name:"Computer Aided Drafting",akts:4},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      4:[{code:"ME2002",name:"Dynamics",akts:6},{code:"ME2012",name:"Thermodynamics II",akts:6},
+         {code:"ME2032",name:"Strength of Materials",akts:6},{code:"EE2031",name:"Electric Circuits",akts:5},
+         {code:"MATH2052",name:"Engineering Mathematics",akts:6}],
+      5:[{code:"ME3000",name:"Summer Practice I",akts:10},{code:"ME3013",name:"Fluid Mechanics I",akts:6},
+         {code:"ME3023",name:"Machine Elements I",akts:6},{code:"ME3033",name:"Manufacturing Processes I",akts:5},
+         {code:"ME3043",name:"Heat Transfer I",akts:5}],
+      6:[{code:"ME3014",name:"Fluid Mechanics II",akts:5},{code:"ME3024",name:"Machine Elements II",akts:6},
+         {code:"ME3034",name:"Manufacturing Processes II",akts:5},{code:"ME3044",name:"Heat Transfer II",akts:5},
+         {code:"ME3054",name:"System Dynamics and Control",akts:6},{code:"NTE_2",name:"Non-Technical Elective - 2",akts:3}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
+         {code:"ME4000",name:"Summer Practice II",akts:10},{code:"ME4297",name:"Engineering Project I",akts:6},
+         {code:"TE1",name:"Technical Elective - 1",akts:5},{code:"TE2",name:"Technical Elective - 2",akts:5}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"ME4298",name:"Engineering Project II",akts:5},
+         {code:"TE3",name:"Technical Elective - 3",akts:5},{code:"TE4",name:"Technical Elective - 4",akts:5},
+         {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"ENG_UE",name:"University Elective",akts:3}]
+    }
+  },
+  che: {
+    name: "Kimya Mühendisliği",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"CHE1002",name:"Introduction to Chemical Engineering",akts:4},{code:"CHEM1008",name:"Chemistry II",akts:6},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"PHYS1102",name:"Physics II",akts:4},{code:"PHYS1104",name:"Physics Lab II",akts:2},
+         {code:"TRD122",name:"Türk Dili II",akts:2},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      3:[{code:"CHE2001",name:"Material and Energy Balances",akts:7},{code:"CHEM2011",name:"Organic Chemistry",akts:6},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MATH2056",name:"Linear Algebra",akts:4},
+         {code:"CHEM2021",name:"Analytical Chemistry",akts:5}],
+      4:[{code:"CHE2002",name:"Chemical Engineering Thermodynamics I",akts:6},{code:"CHE2012",name:"Fluid Mechanics",akts:6},
+         {code:"CHEM2032",name:"Physical Chemistry",akts:6},{code:"MATH2052",name:"Engineering Mathematics",akts:6},
+         {code:"EE2031",name:"Electric Circuits",akts:5}],
+      5:[{code:"CHE3000",name:"Summer Practice I",akts:10},{code:"CHE3003",name:"Chemical Engineering Thermodynamics II",akts:6},
+         {code:"CHE3013",name:"Heat Transfer",akts:6},{code:"CHE3023",name:"Mass Transfer",akts:6},
+         {code:"CHE3033",name:"Chemical Reaction Engineering I",akts:6}],
+      6:[{code:"CHE3014",name:"Separation Processes",akts:6},{code:"CHE3034",name:"Chemical Reaction Engineering II",akts:6},
+         {code:"CHE3044",name:"Process Control",akts:6},{code:"CHE3054",name:"Chemical Engineering Laboratory I",akts:4},
+         {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
+         {code:"CHE4000",name:"Summer Practice II",akts:10},{code:"CHE4297",name:"Engineering Project I",akts:6},
+         {code:"CHE4055",name:"Chemical Engineering Laboratory II",akts:4},{code:"TE1",name:"Technical Elective - 1",akts:5}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"CHE4298",name:"Engineering Project II",akts:5},
+         {code:"CHE4012",name:"Process Design",akts:6},{code:"TE2",name:"Technical Elective - 2",akts:5},
+         {code:"TE3",name:"Technical Elective - 3",akts:5},{code:"ENG_UE",name:"University Elective",akts:3}]
+    }
+  },
+  enve: {
+    name: "Çevre Mühendisliği",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"ENVE1002",name:"Introduction to Environmental Engineering",akts:4},{code:"CHEM1008",name:"Chemistry II",akts:6},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"PHYS1102",name:"Physics II",akts:4},{code:"PHYS1104",name:"Physics Lab II",akts:2},
+         {code:"TRD122",name:"Türk Dili II",akts:2},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      3:[{code:"ENVE2001",name:"Environmental Chemistry I",akts:6},{code:"ENVE2011",name:"Statics and Strength of Materials",akts:5},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MATH2056",name:"Linear Algebra",akts:4},
+         {code:"ENVE2021",name:"Environmental Microbiology",akts:5}],
+      4:[{code:"ENVE2002",name:"Environmental Chemistry II",akts:6},{code:"ENVE2012",name:"Fluid Mechanics",akts:6},
+         {code:"ENVE2022",name:"Environmental Ecology",akts:4},{code:"STAT2253",name:"Probability and Statistics",akts:5},
+         {code:"MATH2052",name:"Engineering Mathematics",akts:6}],
+      5:[{code:"ENVE3000",name:"Summer Practice I",akts:10},{code:"ENVE3003",name:"Water Supply and Sewerage",akts:6},
+         {code:"ENVE3013",name:"Unit Operations",akts:6},{code:"ENVE3023",name:"Hydraulics",akts:5},
+         {code:"ENVE3033",name:"Air Pollution and Control",akts:5}],
+      6:[{code:"ENVE3014",name:"Water and Wastewater Treatment",akts:7},{code:"ENVE3024",name:"Solid Waste Management",akts:5},
+         {code:"ENVE3034",name:"Environmental Modeling",akts:5},{code:"ENVE3044",name:"Environmental Law and Policy",akts:4},
+         {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
+         {code:"ENVE4000",name:"Summer Practice II",akts:10},{code:"ENVE4297",name:"Engineering Project I",akts:6},
+         {code:"TE1",name:"Technical Elective - 1",akts:5},{code:"TE2",name:"Technical Elective - 2",akts:5}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"ENVE4298",name:"Engineering Project II",akts:5},
+         {code:"TE3",name:"Technical Elective - 3",akts:5},{code:"TE4",name:"Technical Elective - 4",akts:5},
+         {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"ENG_UE",name:"University Elective",akts:3}]
+    }
+  },
+  mse: {
+    name: "Metalurji ve Malzeme Mühendisliği",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"MSE1002",name:"Introduction to Materials Engineering",akts:4},{code:"CHEM1008",name:"Chemistry II",akts:6},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"PHYS1102",name:"Physics II",akts:4},{code:"PHYS1104",name:"Physics Lab II",akts:2},
+         {code:"TRD122",name:"Türk Dili II",akts:2},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      3:[{code:"MSE2001",name:"Materials Science I",akts:6},{code:"MSE2011",name:"Materials Thermodynamics I",akts:6},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MATH2056",name:"Linear Algebra",akts:4},
+         {code:"MSE2021",name:"Crystallography",akts:5}],
+      4:[{code:"MSE2002",name:"Materials Science II",akts:6},{code:"MSE2012",name:"Materials Thermodynamics II",akts:6},
+         {code:"MSE2032",name:"Mechanical Behavior of Materials",akts:6},{code:"STAT2253",name:"Probability and Statistics",akts:5},
+         {code:"MATH2052",name:"Engineering Mathematics",akts:6}],
+      5:[{code:"MSE3000",name:"Summer Practice I",akts:10},{code:"MSE3003",name:"Phase Transformations",akts:6},
+         {code:"MSE3013",name:"Extractive Metallurgy",akts:6},{code:"MSE3023",name:"Transport Phenomena",akts:5},
+         {code:"MSE3033",name:"Materials Characterization",akts:5}],
+      6:[{code:"MSE3014",name:"Ceramic Materials",akts:5},{code:"MSE3024",name:"Polymer Materials",akts:5},
+         {code:"MSE3034",name:"Metal Casting and Solidification",akts:6},{code:"MSE3044",name:"Heat Treatment",akts:5},
+         {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
+         {code:"MSE4000",name:"Summer Practice II",akts:10},{code:"MSE4297",name:"Engineering Project I",akts:6},
+         {code:"TE1",name:"Technical Elective - 1",akts:5},{code:"TE2",name:"Technical Elective - 2",akts:5}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"MSE4298",name:"Engineering Project II",akts:5},
+         {code:"TE3",name:"Technical Elective - 3",akts:5},{code:"TE4",name:"Technical Elective - 4",akts:5},
+         {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"ENG_UE",name:"University Elective",akts:3}]
+    }
+  },
+  bio: {
+    name: "Biyomühendislik",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"BIO1002",name:"Introduction to Bioengineering",akts:4},{code:"BIO1012",name:"General Biology",akts:6},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"PHYS1102",name:"Physics II",akts:4},{code:"PHYS1104",name:"Physics Lab II",akts:2},
+         {code:"TRD122",name:"Türk Dili II",akts:2},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      3:[{code:"BIO2001",name:"Biochemistry I",akts:6},{code:"BIO2011",name:"Microbiology",akts:6},
+         {code:"CHEM2011",name:"Organic Chemistry",akts:6},{code:"MATH2055",name:"Differential Equations",akts:4},
+         {code:"MATH2056",name:"Linear Algebra",akts:4}],
+      4:[{code:"BIO2002",name:"Biochemistry II",akts:6},{code:"BIO2012",name:"Molecular Biology",akts:6},
+         {code:"BIO2022",name:"Bioengineering Thermodynamics",akts:6},{code:"STAT2253",name:"Probability and Statistics",akts:5},
+         {code:"MATH2052",name:"Engineering Mathematics",akts:6}],
+      5:[{code:"BIO3000",name:"Summer Practice I",akts:10},{code:"BIO3003",name:"Genetics",akts:5},
+         {code:"BIO3013",name:"Transport Phenomena in Bioengineering",akts:6},{code:"BIO3023",name:"Bioprocess Engineering I",akts:6},
+         {code:"BIO3033",name:"Cell Culture Techniques",akts:5}],
+      6:[{code:"BIO3014",name:"Bioprocess Engineering II",akts:6},{code:"BIO3024",name:"Enzyme Engineering",akts:5},
+         {code:"BIO3034",name:"Bioinformatics",akts:5},{code:"BIO3044",name:"Bioseparation Techniques",akts:5},
+         {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
+         {code:"BIO4000",name:"Summer Practice II",akts:10},{code:"BIO4297",name:"Engineering Project I",akts:6},
+         {code:"TE1",name:"Technical Elective - 1",akts:5},{code:"TE2",name:"Technical Elective - 2",akts:5}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"BIO4298",name:"Engineering Project II",akts:5},
+         {code:"TE3",name:"Technical Elective - 3",akts:5},{code:"TE4",name:"Technical Elective - 4",akts:5},
+         {code:"ENG_FTE",name:"Faculty Technical Elective",akts:5},{code:"ENG_UE",name:"University Elective",akts:3}]
+    }
+  },
+  ce: {
+    name: "İnşaat Mühendisliği",
+    syllabus: {
+      1:[{code:"CHEM1007",name:"Basic Chemistry",akts:6},{code:"CSE1145",name:"Introduction to Computer Programming",akts:5},
+         {code:"ENG1001",name:"Academic Presentation Skills for Engineers",akts:3},{code:"ISG121",name:"İş Sağlığı ve Güvenliği I",akts:2},
+         {code:"MATH1001",name:"Calculus I",akts:6},{code:"PHYS1101",name:"Physics I",akts:4},
+         {code:"PHYS1103",name:"Physics Lab I",akts:2},{code:"TRD121",name:"Türk Dili I",akts:2}],
+      2:[{code:"CE1002",name:"Engineering Drawing",akts:5},{code:"CE1100",name:"Introduction to Civil Engineering",akts:3},
+         {code:"ISG122",name:"İş Sağlığı ve Güvenliği II",akts:2},{code:"MATH1002",name:"Calculus II",akts:6},
+         {code:"MATH2056",name:"Linear Algebra",akts:4},{code:"PHYS1102",name:"Physics II",akts:4},
+         {code:"PHYS1104",name:"Physics Lab II",akts:2},{code:"TRD122",name:"Türk Dili II",akts:2}],
+      3:[{code:"CE2001",name:"Statics",akts:6},{code:"CE2011",name:"Surveying",akts:5},
+         {code:"MATH2055",name:"Differential Equations",akts:4},{code:"MSE2072",name:"Introduction to Materials Science",akts:4},
+         {code:"CE2021",name:"Construction Materials",akts:5},{code:"NTE_1",name:"Non-Technical Elective - 1",akts:3}],
+      4:[{code:"CE2002",name:"Dynamics",akts:5},{code:"CE2032",name:"Strength of Materials",akts:6},
+         {code:"CE2042",name:"Fluid Mechanics",akts:6},{code:"STAT2253",name:"Probability and Statistics",akts:5},
+         {code:"MATH2052",name:"Engineering Mathematics",akts:6}],
+      5:[{code:"CE3000",name:"Summer Practice I",akts:10},{code:"CE3003",name:"Structural Analysis I",akts:6},
+         {code:"CE3013",name:"Soil Mechanics I",akts:6},{code:"CE3023",name:"Hydraulics",akts:5},
+         {code:"CE3033",name:"Transportation Engineering",akts:5}],
+      6:[{code:"CE3004",name:"Structural Analysis II",akts:6},{code:"CE3014",name:"Soil Mechanics II",akts:5},
+         {code:"CE3024",name:"Reinforced Concrete I",akts:6},{code:"CE3034",name:"Steel Structures I",akts:5},
+         {code:"NTE_2",name:"Non-Technical Elective - 2",akts:3}],
+      7:[{code:"ATA121",name:"Atatürk İlkeleri ve İnkılap Tarihi I",akts:2},{code:"ECON2004",name:"Engineering Economy",akts:4},
+         {code:"CE4000",name:"Summer Practice II",akts:10},{code:"CE4297",name:"Engineering Project I",akts:6},
+         {code:"CE4025",name:"Reinforced Concrete II",akts:5},{code:"TE1",name:"Technical Elective - 1",akts:5}],
+      8:[{code:"ATA122",name:"Atatürk İlkeleri ve İnkılap Tarihi II",akts:2},{code:"CE4298",name:"Engineering Project II",akts:5},
+         {code:"CE4036",name:"Construction Management",akts:5},{code:"TE2",name:"Technical Elective - 2",akts:5},
+         {code:"TE3",name:"Technical Elective - 3",akts:5},{code:"ENG_UE",name:"University Elective",akts:3}]
+    }
+  }
 };
 
-const ALL_COURSES = [];
-Object.keys(syllabus).forEach(t => syllabus[t].forEach(c => ALL_COURSES.push({...c, term:Number(t)})));
-
-const STORAGE_KEY = 'eem-gano-transcript';
-const BASELINE_KEY = 'eem-gano-baseline';
-
-function loadTranscript(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+let currentDept = localStorage.getItem('eem-gano-dept') || 'eem';
+if(!DEPARTMENTS[currentDept]) currentDept = 'eem';
+let ALL_COURSES = [];
+function buildAllCourses(){
+  ALL_COURSES = [];
+  const syl = DEPARTMENTS[currentDept].syllabus;
+  Object.keys(syl).forEach(t => syl[t].forEach(c => ALL_COURSES.push({...c, term:Number(t)})));
 }
-function saveTranscript(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(transcript)); }
-function loadBaseline(){
-  try{ return JSON.parse(localStorage.getItem(BASELINE_KEY)) || {gano:'', akts:''}; }catch(e){ return {gano:'', akts:''}; }
-}
-function saveBaseline(){ localStorage.setItem(BASELINE_KEY, JSON.stringify(baseline)); }
-
-let transcript = loadTranscript();   // { CODE: { grade, akts } }
-let baseline = loadBaseline();
-let currentTerm = 1;
-let simOverrides = {};               // { CODE: newGrade }  (in-memory only, resets per session)
+buildAllCourses();
 
 function ensureEntry(code, defaultAkts){
   if(!transcript[code]) transcript[code] = { grade:'', akts:defaultAkts };
   return transcript[code];
 }
+
+const STORAGE_PREFIX = 'eem-gano-transcript-';
+const BASELINE_PREFIX = 'eem-gano-baseline-';
+
+function loadTranscript(dept){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_PREFIX+dept)) || {}; }catch(e){ return {}; }
+}
+function saveTranscript(){ localStorage.setItem(STORAGE_PREFIX+currentDept, JSON.stringify(transcript)); }
+function loadBaseline(dept){
+  try{ return JSON.parse(localStorage.getItem(BASELINE_PREFIX+dept)) || {gano:'', akts:''}; }catch(e){ return {gano:'', akts:''}; }
+}
+function saveBaseline(){ localStorage.setItem(BASELINE_PREFIX+currentDept, JSON.stringify(baseline)); }
+
+let transcript = loadTranscript(currentDept);
+let baseline = loadBaseline(currentDept);
+let currentTerm = 1;
+let simOverrides = {};
+
+// ---------- Department switching ----------
+function populateDeptSelect(){
+  const sel = document.getElementById('dept-select');
+  sel.innerHTML = Object.keys(DEPARTMENTS).map(key =>
+    `<option value="${key}" ${key===currentDept?'selected':''}>${DEPARTMENTS[key].name}</option>`
+  ).join('');
+}
+
+function switchDepartment(dept){
+  currentDept = dept;
+  localStorage.setItem('eem-gano-dept', currentDept);
+  buildAllCourses();
+  transcript = loadTranscript(currentDept);
+  baseline = loadBaseline(currentDept);
+  currentTerm = 1;
+  simOverrides = {};
+  document.getElementById('past-gano').value = baseline.gano || '';
+  document.getElementById('past-akts').value = baseline.akts || '';
+  updateHeaderTitle();
+  renderTermTabs();
+  renderCourseRows();
+  recalcTranscript();
+  renderSimSelectors();
+}
+
+document.getElementById('dept-select').addEventListener('change', e=>{
+  switchDepartment(e.target.value);
+});
 
 // ---------- Tab switching ----------
 document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -352,10 +750,14 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 function renderTermTabs(){
   const wrap = document.getElementById('term-tabs');
   wrap.innerHTML = '';
+  const syl = DEPARTMENTS[currentDept].syllabus;
   for(let i=1;i<=8;i++){
+    const total = syl[i].length;
+    const entered = syl[i].filter(c => transcript[c.code] && transcript[c.code].grade).length;
     const b = document.createElement('button');
     b.className = 'term-chip' + (i===currentTerm ? ' active' : '');
-    b.textContent = i + '. Dönem';
+    const badge = entered > 0 ? `<span class="chip-badge${entered===total?' done':''}">${entered}/${total}</span>` : '';
+    b.innerHTML = `${i}. Dönem${badge}`;
     b.onclick = ()=>{ currentTerm = i; renderTermTabs(); renderCourseRows(); };
     wrap.appendChild(b);
   }
@@ -370,7 +772,7 @@ function gradeOptionsHtml(selected){
 function renderCourseRows(){
   const tbody = document.getElementById('course-rows');
   tbody.innerHTML = '';
-  syllabus[currentTerm].forEach(course=>{
+  DEPARTMENTS[currentDept].syllabus[currentTerm].forEach(course=>{
     const entry = ensureEntry(course.code, course.akts);
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -426,7 +828,92 @@ function recalcTranscript(){
   document.getElementById('r-yano').textContent = r.yano.toFixed(2);
   document.getElementById('r-total-akts').textContent = r.totalAkts;
   document.getElementById('r-gano').textContent = r.gano.toFixed(2);
+  updateThreshold(r.gano);
+  drawChart();
+  renderTermTabs();
   recalcSimulation();
+}
+
+function updateThreshold(gano){
+  document.getElementById('th-fill').style.width = (gano/4*100).toFixed(1) + '%';
+  const st = document.getElementById('th-status');
+  if(gano === 0){ st.innerHTML = ''; return; }
+  if(gano < 1.80){
+    st.innerHTML = `⚠️ Probasyon sınırının altındasın. 1.80 için <b>+${(1.80-gano).toFixed(2)}</b> puan gerekli.`;
+  } else if(gano < 3.00){
+    st.innerHTML = `Probasyon sınırının üzerindesin. Onur (3.00) için <b>+${(3.00-gano).toFixed(2)}</b> puan gerekli.`;
+  } else if(gano < 3.50){
+    st.innerHTML = `🎖️ Onur öğrencisi aralığındasın! Yüksek Onur (3.50) için <b>+${(3.50-gano).toFixed(2)}</b> puan gerekli.`;
+  } else {
+    st.innerHTML = `🏆 Yüksek Onur aralığındasın, harika gidiyorsun!`;
+  }
+}
+
+function drawChart(){
+  const canvas = document.getElementById('gano-chart');
+  if(!canvas || !canvas.getContext) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth || 300, h = 150;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+
+  // cumulative GANO per term
+  const pastGano = parseFloat(baseline.gano) || 0;
+  const pastAkts = parseFloat(baseline.akts) || 0;
+  let cumAkts = pastAkts, cumScore = pastGano*pastAkts;
+  const pts = [];
+  for(let t=1;t<=8;t++){
+    let has=false;
+    ALL_COURSES.filter(c=>c.term===t).forEach(c=>{
+      const e = transcript[c.code];
+      if(e && e.grade && GRADE_SCALE[e.grade]!==undefined){
+        const a = e.akts || c.akts;
+        cumAkts += a; cumScore += a*GRADE_SCALE[e.grade]; has=true;
+      }
+    });
+    if(has || (t===1 && pastAkts>0)) pts.push({term:t, gano: cumAkts?cumScore/cumAkts:0});
+  }
+
+  const padL=28, padB=20, padT=10, padR=8;
+  const plotW = w-padL-padR, plotH = h-padT-padB;
+  // grid + threshold lines
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.fillStyle = '#94a3b8'; ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth=1;
+  [0,1,2,3,4].forEach(v=>{
+    const y = padT + plotH - (v/4)*plotH;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    ctx.fillText(v.toFixed(0), 8, y+3);
+  });
+  [[1.80,'#f59e0b'],[3.00,'#10b981'],[3.50,'#3b82f6']].forEach(([v,color])=>{
+    const y = padT + plotH - (v/4)*plotH;
+    ctx.strokeStyle = color; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  if(pts.length===0){
+    ctx.fillStyle='#94a3b8'; ctx.font='11px Inter, sans-serif';
+    ctx.fillText('Not girildikçe grafik burada oluşacak', padL+10, h/2);
+    return;
+  }
+
+  const xFor = i => padL + (pts.length===1 ? plotW/2 : (i/(pts.length-1))*plotW);
+  const yFor = g => padT + plotH - (g/4)*plotH;
+
+  ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ i===0 ? ctx.moveTo(xFor(i),yFor(p.gano)) : ctx.lineTo(xFor(i),yFor(p.gano)); });
+  ctx.stroke();
+  pts.forEach((p,i)=>{
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath(); ctx.arc(xFor(i),yFor(p.gano),3.5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#64748b'; ctx.font='9px Inter, sans-serif';
+    ctx.fillText(p.term+'.D', xFor(i)-7, h-6);
+    ctx.fillStyle = '#1e3a8a'; ctx.font='bold 9px JetBrains Mono, monospace';
+    ctx.fillText(p.gano.toFixed(2), xFor(i)-11, yFor(p.gano)-8);
+  });
 }
 
 document.getElementById('past-gano').addEventListener('input', e=>{ baseline.gano = e.target.value; saveBaseline(); recalcTranscript(); });
@@ -451,10 +938,157 @@ function renderSimSelectors(){
       `<option value="${c.code}">${c.term}.D — ${c.name} (${transcript[c.code].grade})</option>`
     ).join('');
   }
-  const gradeSel = document.getElementById('sim-grade-select');
-  gradeSel.innerHTML = GRADES.map(g=>`<option value="${g}">${g}</option>`).join('');
+  updateSimGradeOptions();
+  renderSuggestions();
   renderSimList();
 }
+
+function updateSimGradeOptions(){
+  const courseSel = document.getElementById('sim-course-select');
+  const gradeSel = document.getElementById('sim-grade-select');
+  const code = courseSel.value;
+  const currentGrade = code && transcript[code] ? transcript[code].grade : '';
+  const currentPoint = currentGrade ? GRADE_SCALE[currentGrade] : -1;
+  const higher = GRADES.filter(g => GRADE_SCALE[g] > currentPoint);
+  gradeSel.innerHTML = (higher.length ? higher : GRADES).map(g=>`<option value="${g}">${g}</option>`).join('');
+}
+
+document.getElementById('sim-course-select').addEventListener('change', updateSimGradeOptions);
+
+// ---------- En verimli yükseltmeler ----------
+function suggestionRanking(){
+  const base = computeGano().gano;
+  return takenCourses().map(c=>{
+    const gain = computeGano({...simOverrides, [c.code]:'AA'}).gano - computeGano(simOverrides).gano;
+    return { ...c, oldGrade: transcript[c.code].grade, gain };
+  }).filter(s=>s.gain > 0.0001).sort((a,b)=>b.gain-a.gain);
+}
+
+function renderSuggestions(){
+  const list = document.getElementById('suggest-list');
+  const empty = document.getElementById('suggest-empty');
+  const ranked = suggestionRanking().filter(s => !simOverrides[s.code]);
+  list.innerHTML = '';
+  empty.style.display = ranked.length ? 'none' : 'block';
+  ranked.forEach((s,i)=>{
+    const div = document.createElement('div');
+    div.className = 'suggest-item';
+    div.innerHTML = `
+      <div class="suggest-rank">${i+1}</div>
+      <div class="suggest-info">
+        <div>${s.name}</div>
+        <div class="suggest-meta">${s.term}. Dönem · ${s.akts} AKTS · Mevcut: ${s.oldGrade}</div>
+      </div>
+      <div class="suggest-gain">+${s.gain.toFixed(3)}</div>
+      <button class="btn-mini" data-code="${s.code}">AA'ya Ekle</button>
+    `;
+    list.appendChild(div);
+  });
+  list.querySelectorAll('.btn-mini').forEach(b=>{
+    b.addEventListener('click', e=>{
+      simOverrides[e.target.dataset.code] = 'AA';
+      renderSimSelectors();
+    });
+  });
+}
+
+// ---------- Hedef GANO planlayıcı ----------
+document.getElementById('target-btn').addEventListener('click', ()=>{
+  const target = parseFloat(document.getElementById('target-gano').value);
+  const box = document.getElementById('target-result');
+  box.style.display = 'block';
+  if(isNaN(target) || target <= 0 || target > 4){
+    box.innerHTML = '<span class="fail">Geçerli bir hedef gir (0.01 – 4.00 arası).</span>';
+    return;
+  }
+  const current = computeGano().gano;
+  if(current >= target){
+    box.innerHTML = `<span class="ok">✓ Zaten hedefin üzerindesin!</span> Güncel GANO: <b class="mono">${current.toFixed(2)}</b>`;
+    return;
+  }
+  // Greedy: en yüksek etkili dersleri sırayla AA yaparak hedefe ulaşmaya çalış
+  const plan = {};
+  let candidates = takenCourses();
+  let reached = false;
+  while(candidates.length){
+    let best=null, bestGain=0;
+    const now = computeGano(plan).gano;
+    candidates.forEach(c=>{
+      const g = computeGano({...plan,[c.code]:'AA'}).gano - now;
+      if(g > bestGain){ bestGain=g; best=c; }
+    });
+    if(!best) break;
+    plan[best.code] = 'AA';
+    candidates = candidates.filter(c=>c.code!==best.code);
+    if(computeGano(plan).gano >= target){ reached=true; break; }
+  }
+  const simGano = computeGano(plan).gano;
+  const planCodes = Object.keys(plan);
+  let html = '';
+  if(planCodes.length){
+    html += `<div style="margin-bottom:.5rem;">Yükseltilecek dersler <span class="suggest-meta">(hepsi AA varsayımıyla)</span>:</div>`;
+    planCodes.forEach(code=>{
+      const c = ALL_COURSES.find(x=>x.code===code);
+      html += `<div class="plan-item">• ${c.name} <span class="suggest-meta">(${transcript[code].grade} → AA, ${c.akts} AKTS)</span></div>`;
+    });
+    html += `<div style="margin-top:.6rem;">Ulaşılan GANO: <b class="mono">${simGano.toFixed(2)}</b> `;
+    html += reached
+      ? `<span class="ok">✓ Hedefe ulaşıyor!</span></div>`
+      : `<span class="fail">✗ Hedef ${target.toFixed(2)}'e ulaşmıyor — tüm alttan dersler AA olsa bile yetmiyor. Gelecek dönem derslerinden yüksek not almak gerekecek.</span></div>`;
+    html += `<div style="margin-top:.6rem;"><button class="btn-mini" id="apply-plan">Bu planı simülasyona aktar</button></div>`;
+  } else {
+    html = '<span class="fail">Yükseltilebilecek (DC ve altı) ders bulunamadı.</span>';
+  }
+  box.innerHTML = html;
+  const applyBtn = document.getElementById('apply-plan');
+  if(applyBtn) applyBtn.addEventListener('click', ()=>{
+    Object.assign(simOverrides, plan);
+    renderSimSelectors();
+  });
+});
+
+// ---------- Yedekleme / Sıfırlama ----------
+document.getElementById('btn-export').addEventListener('click', ()=>{
+  const data = { dept: currentDept, transcript, baseline, exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gano-yedek-${currentDept}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('btn-import').addEventListener('click', ()=> document.getElementById('import-file').click());
+document.getElementById('import-file').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data.transcript) throw new Error('geçersiz');
+      if(data.dept && DEPARTMENTS[data.dept]) { currentDept = data.dept; localStorage.setItem('eem-gano-dept', currentDept); buildAllCourses(); populateDeptSelect(); updateHeaderTitle(); }
+      transcript = data.transcript || {};
+      baseline = data.baseline || {gano:'',akts:''};
+      saveTranscript(); saveBaseline();
+      document.getElementById('past-gano').value = baseline.gano || '';
+      document.getElementById('past-akts').value = baseline.akts || '';
+      simOverrides = {};
+      renderTermTabs(); renderCourseRows(); recalcTranscript(); renderSimSelectors();
+    }catch(err){ alert('Yedek dosyası okunamadı. Geçerli bir JSON yedeği seç.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  if(!confirm(`${DEPARTMENTS[currentDept].name} için girilen TÜM notlar silinecek. Emin misin?`)) return;
+  transcript = {}; baseline = {gano:'',akts:''}; simOverrides = {};
+  saveTranscript(); saveBaseline();
+  document.getElementById('past-gano').value = '';
+  document.getElementById('past-akts').value = '';
+  renderTermTabs(); renderCourseRows(); recalcTranscript(); renderSimSelectors();
+});
 
 document.getElementById('sim-add-btn').addEventListener('click', ()=>{
   const code = document.getElementById('sim-course-select').value;
@@ -524,6 +1158,15 @@ function updateStickyBar(current, simulated, delta){
 }
 
 // ---------- Init ----------
+function updateHeaderTitle(){
+  document.getElementById('header-title').textContent = `Marmara Mühendislik — GANO Simülatörü`;
+  document.getElementById('header-sub').textContent = `${DEPARTMENTS[currentDept].name} · Alttan dersi yükseltirsen ortalamanın ne kadar değişeceğini gör`;
+  document.title = `${DEPARTMENTS[currentDept].name} GANO Simülatörü`;
+}
+
+populateDeptSelect();
+updateHeaderTitle();
+window.addEventListener('resize', drawChart);
 document.getElementById('past-gano').value = baseline.gano || '';
 document.getElementById('past-akts').value = baseline.akts || '';
 renderTermTabs();
