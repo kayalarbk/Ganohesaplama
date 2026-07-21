@@ -114,7 +114,10 @@
     background:#f8fafc; color:var(--text); width:100%; font-family:inherit;
   }
   select:focus, input:focus{ outline:2px solid var(--navy-500); outline-offset:1px; background:#fff; }
-  .akts-input{ width:64px; text-align:center; margin:0 auto; }
+  /* sayılar kırpılmasın: spinner okları gizlenip kutu genişletildi */
+  .akts-input{ width:100%; max-width:72px; text-align:center; margin:0 auto; padding:.4rem .2rem; -moz-appearance:textfield; }
+  .akts-input::-webkit-outer-spin-button,
+  .akts-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 
   .del-btn{ border:none; background:none; color:#b3261e; font-weight:600; font-size:.72rem; cursor:pointer; }
 
@@ -223,6 +226,34 @@
   .data-actions button:hover{ border-color:var(--navy-500); }
   .data-actions button.danger{ color:var(--down); }
   .data-actions button.danger:hover{ border-color:var(--down); }
+
+  /* Eklenenler */
+  #sticky-sim-wrap{ display:inline-flex; align-items:baseline; gap:.5rem; }
+  .hint{ margin:0 0 .8rem; font-size:.72rem; line-height:1.45; color:var(--muted); }
+  .warn{
+    margin-top:.6rem; padding:.55rem .7rem; border-radius:10px; font-size:.72rem; line-height:1.45;
+    background:#fff7ed; border:1px solid #fed7aa; color:#9a3412;
+  }
+  .stat-note{ font-size:.68rem; color:#9db0d8; padding-top:.6rem; border-top:1px solid rgba(255,255,255,.1); }
+  .name-input{
+    width:100%; border:1px dashed var(--border); background:#fff; border-radius:8px;
+    padding:.3rem .45rem; font-size:.85rem; font-weight:600; color:var(--navy-900); font-family:inherit;
+  }
+  .name-input:hover{ border-color:var(--navy-500); }
+  .commit-row{
+    display:flex; align-items:center; justify-content:space-between; gap:.8rem;
+    padding:.9rem 1.25rem; border-top:1px solid var(--border); flex-wrap:wrap;
+  }
+  .scenario{
+    border:1px solid var(--border); border-radius:12px; padding:.8rem .9rem; margin-bottom:.7rem;
+    background:#fbfcfe;
+  }
+  .scenario.unreachable{ opacity:.75; }
+  .scenario-head{ display:flex; justify-content:space-between; align-items:center; gap:.6rem; margin-bottom:.45rem; flex-wrap:wrap; }
+  .scenario-head .ok, .scenario-head .fail{ font-family:'JetBrains Mono',monospace; font-size:.9rem; }
+  .autobackup-status{ font-size:.72rem; margin-top:.6rem; color:var(--muted); line-height:1.45; }
+  .autobackup-status.on{ color:var(--up); font-weight:600; }
+  .autobackup-status.err{ color:var(--down); }
 </style>
 </head>
 <body>
@@ -234,14 +265,16 @@
 
 <div class="sticky-gano">
   <span class="cap">Güncel GANO</span><span class="val mono" id="sticky-current">0.00</span>
-  <span class="sep">/</span>
-  <span class="cap">Simüle</span><span class="val mono" id="sticky-sim">0.00</span>
-  <span class="val delta flat mono" id="sticky-delta">—</span>
+  <span id="sticky-sim-wrap" style="display:none;">
+    <span class="sep">/</span>
+    <span class="cap">Simüle</span><span class="val mono" id="sticky-sim">0.00</span>
+    <span class="val delta flat mono" id="sticky-delta">—</span>
+  </span>
 </div>
 
 <main>
   <div class="dept-select-wrap">
-    <label>Bölüm</label>
+    <label for="dept-select">Bölüm</label>
     <select id="dept-select"></select>
   </div>
 
@@ -260,7 +293,7 @@
             <thead>
               <tr>
                 <th>Ders</th>
-                <th style="text-align:center;width:70px;">AKTS</th>
+                <th style="text-align:center;width:86px;">AKTS</th>
                 <th style="text-align:center;width:110px;">Harf Notu</th>
                 <th style="width:40px;"></th>
               </tr>
@@ -273,14 +306,16 @@
       <div>
         <div class="card side-card">
           <h3>Uygulama Öncesi Geçmiş <span style="text-transform:none;color:var(--muted);font-weight:400;">(opsiyonel)</span></h3>
+          <p class="hint">Bu alanı <b>yalnızca</b> tabloya notlarını işlemediğin dönemler için doldur. Hem buraya hem tabloya girersen o dersler iki kez sayılır.</p>
           <div class="field">
-            <label>Geçmiş GANO</label>
-            <input type="number" id="past-gano" step="0.01" placeholder="Örn: 2.85">
+            <label for="past-gano">Geçmiş GANO</label>
+            <input type="number" id="past-gano" step="0.01" min="0" max="4" placeholder="Örn: 2.85">
           </div>
           <div class="field">
-            <label>Geçmiş Toplam AKTS</label>
-            <input type="number" id="past-akts" placeholder="Örn: 60">
+            <label for="past-akts">Geçmiş Toplam AKTS</label>
+            <input type="number" id="past-akts" min="0" placeholder="Örn: 60">
           </div>
+          <div class="warn" id="baseline-warn" style="display:none;"></div>
         </div>
 
         <div class="stat-card">
@@ -292,6 +327,7 @@
             <div><div class="stat-label">Toplam AKTS</div><div class="stat-val mono" id="r-total-akts">0</div></div>
             <div style="text-align:right;"><div class="stat-label">Güncel GANO</div><div class="stat-val big mono" id="r-gano">0.00</div></div>
           </div>
+          <div class="stat-note" id="r-progress"></div>
           <div class="threshold-wrap">
             <div class="threshold-track">
               <div class="threshold-fill" id="th-fill" style="width:0%"></div>
@@ -307,6 +343,13 @@
         <div class="card chart-card">
           <h3>Dönemlere Göre Gelişim</h3>
           <canvas id="gano-chart"></canvas>
+        </div>
+
+        <div class="card side-card" style="margin-top:1.4rem;">
+          <h3>Otomatik Yedek</h3>
+          <p class="hint" id="autobackup-desc">Bilgisayarında bir <b>.json</b> dosyası seç; her değişiklikte veriler oraya otomatik yazılsın. Tarayıcı verisi silinse bile yedeğin durur.</p>
+          <button class="btn-primary" id="btn-autobackup" style="width:100%;">Yedek Dosyası Seç</button>
+          <div class="autobackup-status" id="autobackup-status"></div>
         </div>
 
         <div class="data-actions">
@@ -350,6 +393,10 @@
         <button class="btn-primary" id="sim-add-btn">Simülasyona Ekle</button>
       </div>
       <ul class="sim-list" id="sim-list"></ul>
+      <div class="commit-row" id="commit-row" style="display:none;">
+        <span class="suggest-meta">Notlar kesinleştiyse simülasyondaki dersleri transkriptine kalıcı olarak işleyebilirsin.</span>
+        <button class="btn-primary" id="commit-btn">Transkripte İşle</button>
+      </div>
       <div class="empty-state" id="sim-empty">
         <strong>Simülasyon boş</strong>
         Önce Transkriptim sekmesinden aldığın dersleri işle, sonra buradan hangi dersi hangi nota yükseltirsen ortalamanın nasıl değişeceğini canlı gör.
@@ -359,14 +406,14 @@
     <div class="card suggest-card">
       <div class="head">
         <h3>🎯 Hedef GANO Planlayıcı</h3>
-        <span class="sub">Hedefini gir, hangi dersleri yükseltmen gerektiğini otomatik hesaplayalım</span>
+        <span class="sub">Hedefini gir; üç farklı senaryoyu otomatik hesaplayalım</span>
       </div>
       <div class="target-row">
         <div class="field">
-          <label>Hedef GANO</label>
+          <label for="target-gano">Hedef GANO</label>
           <input type="number" id="target-gano" step="0.01" min="0" max="4" placeholder="Örn: 3.00">
         </div>
-        <button class="btn-primary" id="target-btn">Planla</button>
+        <button class="btn-primary" id="target-btn">Senaryoları Hesapla</button>
       </div>
       <div class="target-result" id="target-result" style="display:none;"></div>
     </div>
@@ -382,11 +429,19 @@
   </section>
 </main>
 
-<footer>Marmara Üniversitesi 4.00'lük AKTS not dönüşüm sistemi esas alınmıştır. Tekrar edilen derste sadece en güncel not sayılır.<br>Ders listeleri ve AKTS değerleri bilgilendirme amaçlıdır; güncel müfredat için bölüm sayfasını kontrol et. AKTS değerlerini tablodan düzenleyebilirsin.</footer>
+<footer>Marmara Üniversitesi 4.00'lük AKTS not dönüşüm sistemi esas alınmıştır. Tekrar edilen derste sadece en güncel not sayılır.<br>
+Staj (Summer Practice), muafiyet ve G/K ile değerlendirilen dersler ortalamaya dahil edilmez.<br>
+Ders listeleri ve AKTS değerleri bilgilendirme amaçlıdır; güncel müfredat için bölüm sayfasını kontrol et. AKTS'yi tablodan düzenleyebilir, seçmeli/yaz okulu derslerini kendin ekleyebilirsin.</footer>
 
 <script>
 const GRADE_SCALE = { 'AA':4.00,'BA':3.50,'BB':3.00,'CB':2.50,'CC':2.00,'DC':1.50,'DD':1.00,'FD':0.50,'FF':0.00 };
 const GRADES = Object.keys(GRADE_SCALE);
+// Ortalamaya girmeyen notlar: staj, muafiyet, devamsızlık
+const NON_GPA_GRADES = { 'G':'G (Geçti)', 'K':'K (Kaldı)', 'M':'M (Muaf)', 'DZ':'DZ (Devamsız)' };
+// Staj dersleri harf notu almaz; G/K ile değerlendirilir ve GANO'ya girmez
+function isPassFail(course){ return /Summer Practice/i.test(course.name); }
+function isGpaGrade(g){ return !!g && GRADE_SCALE[g] !== undefined; }
+function isElectiveSlot(course){ return /Elective/i.test(course.name) || course.custom; }
 
 const DEPARTMENTS = {
   eem: {
@@ -681,8 +736,19 @@ function buildAllCourses(){
   ALL_COURSES = [];
   const syl = DEPARTMENTS[currentDept].syllabus;
   Object.keys(syl).forEach(t => syl[t].forEach(c => ALL_COURSES.push({...c, term:Number(t)})));
+  customCourses.forEach(c => ALL_COURSES.push({...c, custom:true}));
+  // kullanıcının verdiği isim varsa onu kullan
+  ALL_COURSES.forEach(c=>{
+    const e = transcript[c.code];
+    if(e && e.name) c.name = e.name;
+  });
 }
-buildAllCourses();
+
+function coursesOfTerm(term){
+  const syl = DEPARTMENTS[currentDept].syllabus[term] || [];
+  return ALL_COURSES.filter(c => c.term === term && (c.custom || syl.some(s=>s.code===c.code)))
+                    .sort((a,b)=> (a.custom?1:0)-(b.custom?1:0));
+}
 
 function ensureEntry(code, defaultAkts){
   if(!transcript[code]) transcript[code] = { grade:'', akts:defaultAkts };
@@ -691,20 +757,27 @@ function ensureEntry(code, defaultAkts){
 
 const STORAGE_PREFIX = 'eem-gano-transcript-';
 const BASELINE_PREFIX = 'eem-gano-baseline-';
+const CUSTOM_PREFIX = 'eem-gano-custom-';
 
 function loadTranscript(dept){
   try{ return JSON.parse(localStorage.getItem(STORAGE_PREFIX+dept)) || {}; }catch(e){ return {}; }
 }
-function saveTranscript(){ localStorage.setItem(STORAGE_PREFIX+currentDept, JSON.stringify(transcript)); }
+function saveTranscript(){ localStorage.setItem(STORAGE_PREFIX+currentDept, JSON.stringify(transcript)); autoBackup(); }
 function loadBaseline(dept){
   try{ return JSON.parse(localStorage.getItem(BASELINE_PREFIX+dept)) || {gano:'', akts:''}; }catch(e){ return {gano:'', akts:''}; }
 }
-function saveBaseline(){ localStorage.setItem(BASELINE_PREFIX+currentDept, JSON.stringify(baseline)); }
+function saveBaseline(){ localStorage.setItem(BASELINE_PREFIX+currentDept, JSON.stringify(baseline)); autoBackup(); }
+function loadCustom(dept){
+  try{ return JSON.parse(localStorage.getItem(CUSTOM_PREFIX+dept)) || []; }catch(e){ return []; }
+}
+function saveCustom(){ localStorage.setItem(CUSTOM_PREFIX+currentDept, JSON.stringify(customCourses)); autoBackup(); }
 
 let transcript = loadTranscript(currentDept);
 let baseline = loadBaseline(currentDept);
+let customCourses = loadCustom(currentDept);
 let currentTerm = 1;
 let simOverrides = {};
+buildAllCourses();
 
 // ---------- Department switching ----------
 function populateDeptSelect(){
@@ -717,9 +790,10 @@ function populateDeptSelect(){
 function switchDepartment(dept){
   currentDept = dept;
   localStorage.setItem('eem-gano-dept', currentDept);
-  buildAllCourses();
   transcript = loadTranscript(currentDept);
   baseline = loadBaseline(currentDept);
+  customCourses = loadCustom(currentDept);
+  buildAllCourses();
   currentTerm = 1;
   simOverrides = {};
   document.getElementById('past-gano').value = baseline.gano || '';
@@ -750,10 +824,10 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 function renderTermTabs(){
   const wrap = document.getElementById('term-tabs');
   wrap.innerHTML = '';
-  const syl = DEPARTMENTS[currentDept].syllabus;
   for(let i=1;i<=8;i++){
-    const total = syl[i].length;
-    const entered = syl[i].filter(c => transcript[c.code] && transcript[c.code].grade).length;
+    const list = coursesOfTerm(i);
+    const total = list.length;
+    const entered = list.filter(c => transcript[c.code] && transcript[c.code].grade).length;
     const b = document.createElement('button');
     b.className = 'term-chip' + (i===currentTerm ? ' active' : '');
     const badge = entered > 0 ? `<span class="chip-badge${entered===total?' done':''}">${entered}/${total}</span>` : '';
@@ -763,50 +837,107 @@ function renderTermTabs(){
   }
 }
 
-function gradeOptionsHtml(selected){
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function gradeOptionsHtml(selected, course){
   let html = '<option value="">—</option>';
-  GRADES.forEach(g=> html += `<option value="${g}" ${g===selected?'selected':''}>${g}</option>`);
+  if(!isPassFail(course)){
+    GRADES.forEach(g=> html += `<option value="${g}" ${g===selected?'selected':''}>${g}</option>`);
+  }
+  html += '<optgroup label="Ortalamaya girmez">';
+  Object.keys(NON_GPA_GRADES).forEach(g=>{
+    html += `<option value="${g}" ${g===selected?'selected':''}>${NON_GPA_GRADES[g]}</option>`;
+  });
+  html += '</optgroup>';
   return html;
 }
 
 function renderCourseRows(){
   const tbody = document.getElementById('course-rows');
   tbody.innerHTML = '';
-  DEPARTMENTS[currentDept].syllabus[currentTerm].forEach(course=>{
+  coursesOfTerm(currentTerm).forEach(course=>{
     const entry = ensureEntry(course.code, course.akts);
     const tr = document.createElement('tr');
+    const nameCell = isElectiveSlot(course)
+      ? `<input class="name-input" value="${escapeHtml(course.name)}" data-code="${course.code}" data-role="name" placeholder="Ders adını yaz">`
+      : `<div class="course-name">${escapeHtml(course.name)}</div>`;
     tr.innerHTML = `
       <td>
-        <div class="course-name">${course.name}</div>
-        <div class="course-code">${course.code}</div>
+        ${nameCell}
+        <div class="course-code">${course.code}${isPassFail(course)?' · staj (ortalamaya girmez)':''}</div>
       </td>
-      <td><input type="number" class="akts-input" value="${entry.akts}" data-code="${course.code}" data-role="akts"></td>
-      <td><select data-code="${course.code}" data-role="grade">${gradeOptionsHtml(entry.grade)}</select></td>
-      <td></td>
+      <td><input type="number" min="0" step="0.5" class="akts-input" value="${entry.akts}" data-code="${course.code}" data-role="akts"></td>
+      <td><select data-code="${course.code}" data-role="grade">${gradeOptionsHtml(entry.grade, course)}</select></td>
+      <td>${course.custom?`<button class="del-btn" data-role="del-course" data-code="${course.code}">Sil</button>`:''}</td>
     `;
     tbody.appendChild(tr);
   });
 
+  const addTr = document.createElement('tr');
+  addTr.innerHTML = `<td colspan="4" style="padding:.6rem 1rem;">
+    <button class="btn-mini" id="add-course-btn">+ Bu döneme ders ekle</button>
+    <span class="suggest-meta" style="margin-left:.5rem;">Yaz okulu, müfredat dışı veya ikinci seçmeli dersler için</span>
+  </td>`;
+  tbody.appendChild(addTr);
+  document.getElementById('add-course-btn').addEventListener('click', addCustomCourse);
+
   tbody.querySelectorAll('select[data-role="grade"]').forEach(sel=>{
     sel.addEventListener('change', e=>{
-      transcript[e.target.dataset.code].grade = e.target.value;
+      const code = e.target.dataset.code;
+      transcript[code].grade = e.target.value;
+      // notu silinen / ortalamaya girmeyen bir ders simülasyonda kalmasın (hayalet ders sorunu)
+      if(!isGpaGrade(e.target.value)) delete simOverrides[code];
       saveTranscript(); recalcTranscript(); renderSimSelectors();
     });
   });
   tbody.querySelectorAll('input[data-role="akts"]').forEach(inp=>{
     inp.addEventListener('change', e=>{
-      transcript[e.target.dataset.code].akts = parseFloat(e.target.value) || 0;
+      const v = parseFloat(e.target.value);
+      transcript[e.target.dataset.code].akts = (isNaN(v) || v < 0) ? 0 : v;
+      e.target.value = transcript[e.target.dataset.code].akts;
       saveTranscript(); recalcTranscript(); renderSimSelectors();
     });
   });
+  tbody.querySelectorAll('input[data-role="name"]').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      const code = e.target.dataset.code, val = e.target.value.trim();
+      transcript[code].name = val;
+      const custom = customCourses.find(c=>c.code===code);
+      if(custom){ custom.name = val || 'Adsız ders'; saveCustom(); }
+      saveTranscript(); buildAllCourses(); renderCourseRows(); renderSimSelectors();
+    });
+  });
+  tbody.querySelectorAll('button[data-role="del-course"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      const code = e.target.dataset.code;
+      const c = ALL_COURSES.find(x=>x.code===code);
+      if(!confirm(`"${c?c.name:code}" silinsin mi?`)) return;
+      customCourses = customCourses.filter(x=>x.code!==code);
+      delete transcript[code]; delete simOverrides[code];
+      saveCustom(); saveTranscript(); buildAllCourses();
+      renderTermTabs(); renderCourseRows(); recalcTranscript(); renderSimSelectors();
+    });
+  });
+}
+
+function addCustomCourse(){
+  const code = 'CUSTOM_' + Date.now().toString(36);
+  customCourses.push({ code, name:'', akts:5, term:currentTerm });
+  transcript[code] = { grade:'', akts:5, name:'' };
+  saveCustom(); saveTranscript(); buildAllCourses();
+  renderTermTabs(); renderCourseRows();
+  const inp = document.querySelector(`input[data-role="name"][data-code="${code}"]`);
+  if(inp) inp.focus();
 }
 
 function computeGano(overrideMap = {}){
   let termAkts=0, termScore=0, totalAkts=0, totalScore=0;
   ALL_COURSES.forEach(course=>{
     const entry = transcript[course.code];
-    const grade = overrideMap[course.code] !== undefined ? overrideMap[course.code] : (entry ? entry.grade : '');
-    if(grade && GRADE_SCALE[grade] !== undefined){
+    const base = entry ? entry.grade : '';
+    // override yalnızca gerçekten alınmış (ortalamaya giren notu olan) derse uygulanır
+    const grade = (overrideMap[course.code] !== undefined && isGpaGrade(base)) ? overrideMap[course.code] : base;
+    if(isGpaGrade(grade)){
       const akts = (entry ? entry.akts : course.akts) || course.akts;
       totalAkts += akts; totalScore += akts * GRADE_SCALE[grade];
       if(course.term === currentTerm){ termAkts += akts; termScore += akts * GRADE_SCALE[grade]; }
@@ -828,10 +959,36 @@ function recalcTranscript(){
   document.getElementById('r-yano').textContent = r.yano.toFixed(2);
   document.getElementById('r-total-akts').textContent = r.totalAkts;
   document.getElementById('r-gano').textContent = r.gano.toFixed(2);
+  updateProgressNote();
+  updateBaselineWarning();
   updateThreshold(r.gano);
   drawChart();
   renderTermTabs();
   recalcSimulation();
+}
+
+function updateProgressNote(){
+  const entered = ALL_COURSES.filter(c => transcript[c.code] && transcript[c.code].grade).length;
+  const nonGpa = ALL_COURSES.filter(c => transcript[c.code] && transcript[c.code].grade && !isGpaGrade(transcript[c.code].grade));
+  const nonGpaAkts = nonGpa.reduce((s,c)=> s + ((transcript[c.code].akts) || c.akts), 0);
+  let txt = `${entered}/${ALL_COURSES.length} ders girildi`;
+  if(entered < ALL_COURSES.length) txt += ' — GANO yalnızca girdiğin derslerden hesaplanıyor.';
+  if(nonGpaAkts > 0) txt += ` · Ortalamaya girmeyen (staj/muaf/G-K): ${nonGpaAkts} AKTS`;
+  document.getElementById('r-progress').textContent = txt;
+}
+
+function updateBaselineWarning(){
+  const box = document.getElementById('baseline-warn');
+  const pastAkts = parseFloat(baseline.akts) || 0;
+  const graded = ALL_COURSES.filter(c => transcript[c.code] && isGpaGrade(transcript[c.code].grade));
+  if(pastAkts > 0 && graded.length > 0){
+    const gradedAkts = graded.reduce((s,c)=> s + ((transcript[c.code].akts)||c.akts), 0);
+    box.style.display = 'block';
+    box.innerHTML = `⚠️ Hem geçmiş AKTS (<b>${pastAkts}</b>) hem de tabloda <b>${graded.length}</b> ders (<b>${gradedAkts}</b> AKTS) girili.
+      Bu dersler geçmiş GANO'ya da dahilse <b>iki kez sayılıyor</b> demektir. Ya geçmiş alanlarını boşalt, ya da o dönemlerin notlarını tablodan kaldır.`;
+  } else {
+    box.style.display = 'none';
+  }
 }
 
 function updateThreshold(gano){
@@ -868,7 +1025,7 @@ function drawChart(){
     let has=false;
     ALL_COURSES.filter(c=>c.term===t).forEach(c=>{
       const e = transcript[c.code];
-      if(e && e.grade && GRADE_SCALE[e.grade]!==undefined){
+      if(e && isGpaGrade(e.grade)){
         const a = e.akts || c.akts;
         cumAkts += a; cumScore += a*GRADE_SCALE[e.grade]; has=true;
       }
@@ -948,16 +1105,18 @@ function updateSimGradeOptions(){
   const gradeSel = document.getElementById('sim-grade-select');
   const code = courseSel.value;
   const currentGrade = code && transcript[code] ? transcript[code].grade : '';
-  const currentPoint = currentGrade ? GRADE_SCALE[currentGrade] : -1;
-  const higher = GRADES.filter(g => GRADE_SCALE[g] > currentPoint);
-  gradeSel.innerHTML = (higher.length ? higher : GRADES).map(g=>`<option value="${g}">${g}</option>`).join('');
+  // tekrar alınan derste son not geçerli olduğu için not düşebilir de; hepsini göster
+  const opts = GRADES.filter(g => g !== currentGrade);
+  gradeSel.innerHTML = opts.map(g=>{
+    const lower = currentGrade && GRADE_SCALE[g] < GRADE_SCALE[currentGrade];
+    return `<option value="${g}">${g}${lower?' (düşüş)':''}</option>`;
+  }).join('');
 }
 
 document.getElementById('sim-course-select').addEventListener('change', updateSimGradeOptions);
 
 // ---------- En verimli yükseltmeler ----------
 function suggestionRanking(){
-  const base = computeGano().gano;
   return takenCourses().map(c=>{
     const gain = computeGano({...simOverrides, [c.code]:'AA'}).gano - computeGano(simOverrides).gano;
     return { ...c, oldGrade: transcript[c.code].grade, gain };
@@ -976,8 +1135,8 @@ function renderSuggestions(){
     div.innerHTML = `
       <div class="suggest-rank">${i+1}</div>
       <div class="suggest-info">
-        <div>${s.name}</div>
-        <div class="suggest-meta">${s.term}. Dönem · ${s.akts} AKTS · Mevcut: ${s.oldGrade}</div>
+        <div>${escapeHtml(s.name)}</div>
+        <div class="suggest-meta">${s.term}. Dönem · ${(transcript[s.code]&&transcript[s.code].akts)||s.akts} AKTS · Mevcut: ${s.oldGrade}</div>
       </div>
       <div class="suggest-gain">+${s.gain.toFixed(3)}</div>
       <button class="btn-mini" data-code="${s.code}">AA'ya Ekle</button>
@@ -1001,55 +1160,123 @@ document.getElementById('target-btn').addEventListener('click', ()=>{
     box.innerHTML = '<span class="fail">Geçerli bir hedef gir (0.01 – 4.00 arası).</span>';
     return;
   }
-  const current = computeGano().gano;
-  if(current >= target){
-    box.innerHTML = `<span class="ok">✓ Zaten hedefin üzerindesin!</span> Güncel GANO: <b class="mono">${current.toFixed(2)}</b>`;
+  const simCount = Object.keys(simOverrides).length;
+  // Simülasyonda zaten işaretlediğin dersler sabit kabul edilir; plan onların ÜSTÜNE kurulur
+  const startPlan = {...simOverrides};
+  const startGano = computeGano(startPlan).gano;
+
+  if(startGano >= target){
+    box.innerHTML = `<span class="ok">✓ Hedefin üzerindesin!</span> ${simCount?'Simülasyon dahil ':''}GANO: <b class="mono">${startGano.toFixed(2)}</b>`
+      + (simCount?`<div class="suggest-meta" style="margin-top:.4rem;">Simülasyondaki ${simCount} ders bu hesaba dahil edildi.</div>`:'');
     return;
   }
-  // Greedy: en yüksek etkili dersleri sırayla AA yaparak hedefe ulaşmaya çalış
-  const plan = {};
-  let candidates = takenCourses();
-  let reached = false;
-  while(candidates.length){
-    let best=null, bestGain=0;
-    const now = computeGano(plan).gano;
-    candidates.forEach(c=>{
-      const g = computeGano({...plan,[c.code]:'AA'}).gano - now;
-      if(g > bestGain){ bestGain=g; best=c; }
-    });
-    if(!best) break;
-    plan[best.code] = 'AA';
-    candidates = candidates.filter(c=>c.code!==best.code);
-    if(computeGano(plan).gano >= target){ reached=true; break; }
+
+  const candidates = takenCourses().filter(c => simOverrides[c.code] === undefined);
+  if(!candidates.length){
+    box.innerHTML = `<span class="fail">Yükseltilebilecek (DC ve altı, simülasyona eklenmemiş) ders kalmadı.</span>`;
+    return;
   }
-  const simGano = computeGano(plan).gano;
-  const planCodes = Object.keys(plan);
+
+  const scenarios = [
+    { title:'1 · En hızlı yol', note:'En az sayıda ders, hepsi AA', ...planUniform(startPlan, candidates, target, 'AA') },
+    { title:'2 · Gerçekçi', note:'Dersler BB varsayımıyla', ...planUniform(startPlan, candidates, target, 'BB') },
+    { title:'3 · En az çaba (karma)', note:'Her ders için gereken en düşük not — AA/BB/CB karışık', ...planMixed(startPlan, candidates, target) }
+  ];
+
   let html = '';
-  if(planCodes.length){
-    html += `<div style="margin-bottom:.5rem;">Yükseltilecek dersler <span class="suggest-meta">(hepsi AA varsayımıyla)</span>:</div>`;
-    planCodes.forEach(code=>{
-      const c = ALL_COURSES.find(x=>x.code===code);
-      html += `<div class="plan-item">• ${c.name} <span class="suggest-meta">(${transcript[code].grade} → AA, ${c.akts} AKTS)</span></div>`;
-    });
-    html += `<div style="margin-top:.6rem;">Ulaşılan GANO: <b class="mono">${simGano.toFixed(2)}</b> `;
-    html += reached
-      ? `<span class="ok">✓ Hedefe ulaşıyor!</span></div>`
-      : `<span class="fail">✗ Hedef ${target.toFixed(2)}'e ulaşmıyor — tüm alttan dersler AA olsa bile yetmiyor. Gelecek dönem derslerinden yüksek not almak gerekecek.</span></div>`;
-    html += `<div style="margin-top:.6rem;"><button class="btn-mini" id="apply-plan">Bu planı simülasyona aktar</button></div>`;
-  } else {
-    html = '<span class="fail">Yükseltilebilecek (DC ve altı) ders bulunamadı.</span>';
+  if(simCount){
+    html += `<div class="suggest-meta" style="margin-bottom:.7rem;">Başlangıç: simülasyondaki <b>${simCount}</b> ders dahil, GANO <b class="mono">${startGano.toFixed(2)}</b>. Senaryolar bunun üstüne kuruldu.</div>`;
+  }
+  scenarios.forEach((s,i)=>{
+    const gano = computeGano(s.plan).gano;
+    html += `<div class="scenario${s.reached?'':' unreachable'}">
+      <div class="scenario-head">
+        <div><b>${s.title}</b> <span class="suggest-meta">— ${s.note}</span></div>
+        <div class="${s.reached?'ok':'fail'}">${s.reached?`✓ ${gano.toFixed(2)}`:`✗ ${gano.toFixed(2)}`}</div>
+      </div>`;
+    if(!s.added.length){
+      html += `<div class="suggest-meta">Bu senaryoda yükseltilecek ders yok.</div>`;
+    } else {
+      html += `<div class="suggest-meta" style="margin-bottom:.35rem;">${s.added.length} ders yükseltilecek:</div>`;
+      s.added.forEach(code=>{
+        const c = ALL_COURSES.find(x=>x.code===code);
+        const akts = (transcript[code] && transcript[code].akts) || (c?c.akts:0);
+        html += `<div class="plan-item">• ${escapeHtml(c?c.name:code)} <span class="suggest-meta">(${transcript[code].grade} → <b>${s.plan[code]}</b>, ${akts} AKTS)</span></div>`;
+      });
+    }
+    if(!s.reached){
+      html += `<div class="suggest-meta" style="margin-top:.35rem;">Bu senaryo hedefe yetmiyor — ulaşılabilecek en yüksek GANO <b class="mono">${gano.toFixed(2)}</b>.</div>`;
+    }
+    html += `<div style="margin-top:.5rem;"><button class="btn-mini" data-scenario="${i}">Simülasyona aktar</button></div></div>`;
+  });
+  if(!scenarios.some(s=>s.reached)){
+    html += `<div class="warn">Alttan derslerin hepsi AA olsa bile ${target.toFixed(2)} hedefine ulaşılamıyor. Gelecek dönem derslerinden yüksek not almak gerekecek.</div>`;
   }
   box.innerHTML = html;
-  const applyBtn = document.getElementById('apply-plan');
-  if(applyBtn) applyBtn.addEventListener('click', ()=>{
-    Object.assign(simOverrides, plan);
-    renderSimSelectors();
+  box.querySelectorAll('button[data-scenario]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      Object.assign(simOverrides, scenarios[+e.target.dataset.scenario].plan);
+      renderSimSelectors();
+    });
   });
 });
 
+// Tüm dersleri aynı nota çekerek, en yüksek etkili dersten başlayarak hedefe git
+function planUniform(startPlan, candidates, target, assume){
+  const plan = {...startPlan};
+  const added = [];
+  let rest = candidates.slice(), reached = false;
+  while(rest.length){
+    let best=null, bestGain=0;
+    const now = computeGano(plan).gano;
+    rest.forEach(c=>{
+      const g = computeGano({...plan,[c.code]:assume}).gano - now;
+      if(g > bestGain){ bestGain=g; best=c; }
+    });
+    if(!best) break;
+    plan[best.code] = assume;
+    added.push(best.code);
+    rest = rest.filter(c=>c.code!==best.code);
+    if(computeGano(plan).gano >= target){ reached=true; break; }
+  }
+  return { plan, added, reached };
+}
+
+// Karma: önce hedefe ulaş, sonra her dersi hedefi bozmadan olabilecek en düşük nota indir
+function planMixed(startPlan, candidates, target){
+  const first = planUniform(startPlan, candidates, target, 'AA');
+  if(!first.reached) return first;
+  const plan = {...first.plan};
+  const ascending = GRADES.slice().reverse(); // FF ... AA
+  // en son eklenen (en düşük etkili) dersten başlayarak gereksiz yüksek notları kırp
+  first.added.slice().reverse().forEach(code=>{
+    const old = GRADE_SCALE[transcript[code].grade];
+    for(const g of ascending){
+      if(GRADE_SCALE[g] <= old) continue;
+      const trial = {...plan, [code]:g};
+      if(computeGano(trial).gano >= target){ plan[code] = g; break; }
+    }
+  });
+  // hiç yükseltilmesi gerekmeyen ders kaldıysa listeden çıkar
+  const added = first.added.filter(code=>{
+    const without = {...plan}; delete without[code];
+    if(computeGano(without).gano >= target){ delete plan[code]; return false; }
+    return true;
+  });
+  return { plan, added, reached: computeGano(plan).gano >= target };
+}
+
 // ---------- Yedekleme / Sıfırlama ----------
+function backupPayload(){
+  return {
+    app: 'gano-simulatoru', version: 2,
+    dept: currentDept, transcript, baseline, customCourses,
+    exported: new Date().toISOString()
+  };
+}
+
 document.getElementById('btn-export').addEventListener('click', ()=>{
-  const data = { dept: currentDept, transcript, baseline, exported: new Date().toISOString() };
+  const data = backupPayload();
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1067,10 +1294,15 @@ document.getElementById('import-file').addEventListener('change', e=>{
     try{
       const data = JSON.parse(reader.result);
       if(!data.transcript) throw new Error('geçersiz');
-      if(data.dept && DEPARTMENTS[data.dept]) { currentDept = data.dept; localStorage.setItem('eem-gano-dept', currentDept); buildAllCourses(); populateDeptSelect(); updateHeaderTitle(); }
+      const hasData = Object.values(transcript).some(e=>e && e.grade) || (parseFloat(baseline.akts)||0) > 0;
+      if(hasData && !confirm('Bu yedek, şu an girili olan TÜM verinin üzerine yazacak. Devam edilsin mi?')) return;
+      if(data.dept && DEPARTMENTS[data.dept]) { currentDept = data.dept; localStorage.setItem('eem-gano-dept', currentDept); populateDeptSelect(); }
       transcript = data.transcript || {};
       baseline = data.baseline || {gano:'',akts:''};
-      saveTranscript(); saveBaseline();
+      customCourses = Array.isArray(data.customCourses) ? data.customCourses : [];
+      currentTerm = 1;
+      buildAllCourses(); updateHeaderTitle();
+      saveTranscript(); saveBaseline(); saveCustom();
       document.getElementById('past-gano').value = baseline.gano || '';
       document.getElementById('past-akts').value = baseline.akts || '';
       simOverrides = {};
@@ -1082,9 +1314,10 @@ document.getElementById('import-file').addEventListener('change', e=>{
 });
 
 document.getElementById('btn-reset').addEventListener('click', ()=>{
-  if(!confirm(`${DEPARTMENTS[currentDept].name} için girilen TÜM notlar silinecek. Emin misin?`)) return;
-  transcript = {}; baseline = {gano:'',akts:''}; simOverrides = {};
-  saveTranscript(); saveBaseline();
+  if(!confirm(`${DEPARTMENTS[currentDept].name} için girilen TÜM notlar ve eklediğin dersler silinecek. Emin misin?`)) return;
+  transcript = {}; baseline = {gano:'',akts:''}; simOverrides = {}; customCourses = [];
+  buildAllCourses();
+  saveTranscript(); saveBaseline(); saveCustom();
   document.getElementById('past-gano').value = '';
   document.getElementById('past-akts').value = '';
   renderTermTabs(); renderCourseRows(); recalcTranscript(); renderSimSelectors();
@@ -1098,18 +1331,36 @@ document.getElementById('sim-add-btn').addEventListener('click', ()=>{
   renderSimSelectors();
 });
 
+// Simülasyondaki notlar kesinleştiyse transkripte kalıcı olarak işle
+document.getElementById('commit-btn').addEventListener('click', ()=>{
+  const codes = Object.keys(simOverrides);
+  if(!codes.length) return;
+  const lines = codes.map(code=>{
+    const c = ALL_COURSES.find(x=>x.code===code);
+    return `• ${c?c.name:code}: ${transcript[code].grade} → ${simOverrides[code]}`;
+  }).join('\n');
+  if(!confirm(`Aşağıdaki notlar transkriptine kalıcı olarak işlenecek:\n\n${lines}\n\nEski notların üzerine yazılır. Onaylıyor musun?`)) return;
+  codes.forEach(code=>{ if(transcript[code]) transcript[code].grade = simOverrides[code]; });
+  simOverrides = {};
+  saveTranscript();
+  renderTermTabs(); renderCourseRows(); recalcTranscript(); renderSimSelectors();
+  document.getElementById('target-result').style.display = 'none';
+});
+
 function renderSimList(){
   const list = document.getElementById('sim-list');
   const empty = document.getElementById('sim-empty');
   const codes = Object.keys(simOverrides);
   list.innerHTML = '';
   empty.style.display = codes.length ? 'none' : 'block';
+  document.getElementById('commit-row').style.display = codes.length ? 'flex' : 'none';
   codes.forEach(code=>{
     const course = ALL_COURSES.find(c=>c.code===code);
+    if(!course || !transcript[code]){ delete simOverrides[code]; return; }
     const oldGrade = transcript[code].grade;
     const li = document.createElement('li');
     li.innerHTML = `
-      <div class="chip-info">${course.name}
+      <div class="chip-info">${escapeHtml(course.name)}
         <span class="grade-old">${oldGrade}</span>
         <span class="grade-arrow">→</span>
         <span class="grade-new">${simOverrides[code]}</span>
@@ -1146,6 +1397,8 @@ function recalcSimulation(){
 
 function updateStickyBar(current, simulated, delta){
   document.getElementById('sticky-current').textContent = current.toFixed(2);
+  // simülasyon boşken "Simüle" kısmı kafa karıştırmasın
+  document.getElementById('sticky-sim-wrap').style.display = Object.keys(simOverrides).length ? '' : 'none';
   document.getElementById('sticky-sim').textContent = simulated.toFixed(2);
   const el = document.getElementById('sticky-delta');
   if(Math.abs(delta) < 0.001){
@@ -1157,9 +1410,134 @@ function updateStickyBar(current, simulated, delta){
   }
 }
 
+// ---------- Otomatik yedek (bilgisayardaki JSON dosyasına) ----------
+const AB_DB = 'gano-autobackup', AB_STORE = 'handles', AB_KEY = 'file';
+const backupSupported = typeof window.showSaveFilePicker === 'function';
+let backupHandle = null, backupTimer = null, backupBusy = false;
+
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const r = indexedDB.open(AB_DB, 1);
+    r.onupgradeneeded = ()=> r.result.createObjectStore(AB_STORE);
+    r.onsuccess = ()=> res(r.result);
+    r.onerror = ()=> rej(r.error);
+  });
+}
+function idbReq(mode, fn){
+  return idbOpen().then(db => new Promise((res,rej)=>{
+    const req = fn(db.transaction(AB_STORE, mode).objectStore(AB_STORE));
+    req.onsuccess = ()=> res(req.result);
+    req.onerror = ()=> rej(req.error);
+  }));
+}
+const idbGet = k => idbReq('readonly', s=>s.get(k));
+const idbSet = (k,v) => idbReq('readwrite', s=>s.put(v,k));
+const idbDel = k => idbReq('readwrite', s=>s.delete(k));
+
+function setBackupStatus(msg, cls){
+  const el = document.getElementById('autobackup-status');
+  el.className = 'autobackup-status' + (cls?' '+cls:'');
+  el.innerHTML = msg;
+}
+function updateBackupButton(){
+  const btn = document.getElementById('btn-autobackup');
+  btn.textContent = backupHandle ? 'Başka Dosya Seç' : 'Yedek Dosyası Seç';
+}
+
+async function hasPermission(handle, request){
+  const opts = { mode:'readwrite' };
+  if(await handle.queryPermission(opts) === 'granted') return true;
+  if(request && await handle.requestPermission(opts) === 'granted') return true;
+  return false;
+}
+
+async function writeBackup(interactive){
+  if(!backupHandle || backupBusy) return;
+  backupBusy = true;
+  try{
+    if(!await hasPermission(backupHandle, !!interactive)){
+      setBackupStatus(`⚠️ <b>${escapeHtml(backupHandle.name)}</b> için yazma izni yok. <button class="btn-mini" id="ab-grant">İzin Ver</button>`, 'err');
+      const g = document.getElementById('ab-grant');
+      if(g) g.addEventListener('click', ()=> writeBackup(true));
+      return;
+    }
+    const w = await backupHandle.createWritable();
+    await w.write(JSON.stringify(backupPayload(), null, 2));
+    await w.close();
+    const t = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    setBackupStatus(`✓ Otomatik yedekleniyor → <b>${escapeHtml(backupHandle.name)}</b><br>Son kayıt: ${t} · <button class="btn-mini" id="ab-stop">Durdur</button>`, 'on');
+    const s = document.getElementById('ab-stop');
+    if(s) s.addEventListener('click', stopAutoBackup);
+  }catch(err){
+    setBackupStatus('Yedek yazılamadı: ' + escapeHtml(err.message), 'err');
+  }finally{
+    backupBusy = false;
+  }
+}
+
+// her kayıtta çağrılır, ardarda değişiklikleri tek yazmada toplar
+function autoBackup(){
+  if(!backupHandle) return;
+  clearTimeout(backupTimer);
+  backupTimer = setTimeout(()=> writeBackup(false), 700);
+}
+
+async function stopAutoBackup(){
+  backupHandle = null;
+  try{ await idbDel(AB_KEY); }catch(e){}
+  updateBackupButton();
+  setBackupStatus('Otomatik yedek kapalı. Veriler yalnızca bu tarayıcıda saklanıyor.', '');
+}
+
+async function chooseBackupFile(){
+  if(!backupSupported){
+    setBackupStatus('Bu tarayıcı otomatik yedeklemeyi desteklemiyor (Chrome/Edge gerekiyor). "Yedeği İndir" ile elle yedek alabilirsin.', 'err');
+    return;
+  }
+  try{
+    const handle = await window.showSaveFilePicker({
+      suggestedName: `gano-yedek-${currentDept}.json`,
+      types: [{ description:'GANO yedeği (JSON)', accept:{'application/json':['.json']} }]
+    });
+    backupHandle = handle;
+    try{ await idbSet(AB_KEY, handle); }catch(e){}
+    updateBackupButton();
+    await writeBackup(true);
+  }catch(err){
+    if(err.name !== 'AbortError') setBackupStatus('Dosya seçilemedi: ' + escapeHtml(err.message), 'err');
+  }
+}
+
+async function initAutoBackup(){
+  document.getElementById('btn-autobackup').addEventListener('click', chooseBackupFile);
+  if(!backupSupported){
+    document.getElementById('btn-autobackup').disabled = true;
+    setBackupStatus('Bu özellik Chrome ve Edge\'de çalışır. Diğer tarayıcılarda "Yedeği İndir" butonunu kullan.', 'err');
+    return;
+  }
+  try{
+    const handle = await idbGet(AB_KEY);
+    if(handle){
+      backupHandle = handle;
+      updateBackupButton();
+      if(await hasPermission(handle, false)){
+        setBackupStatus(`✓ Otomatik yedek açık → <b>${escapeHtml(handle.name)}</b> · <button class="btn-mini" id="ab-stop">Durdur</button>`, 'on');
+        const s = document.getElementById('ab-stop');
+        if(s) s.addEventListener('click', stopAutoBackup);
+      } else {
+        setBackupStatus(`<b>${escapeHtml(handle.name)}</b> dosyasına yazmak için izin gerekiyor. <button class="btn-mini" id="ab-grant">İzin Ver</button>`, 'err');
+        const g = document.getElementById('ab-grant');
+        if(g) g.addEventListener('click', ()=> writeBackup(true));
+      }
+      return;
+    }
+  }catch(e){}
+  setBackupStatus('Henüz yedek dosyası seçilmedi. Veriler yalnızca bu tarayıcıda saklanıyor.', '');
+}
+
 // ---------- Init ----------
 function updateHeaderTitle(){
-  document.getElementById('header-title').textContent = `Marmara Mühendislik — GANO Simülatörü`;
+  document.getElementById('header-title').textContent = `${DEPARTMENTS[currentDept].name} — GANO Simülatörü`;
   document.getElementById('header-sub').textContent = `${DEPARTMENTS[currentDept].name} · Alttan dersi yükseltirsen ortalamanın ne kadar değişeceğini gör`;
   document.title = `${DEPARTMENTS[currentDept].name} GANO Simülatörü`;
 }
@@ -1173,6 +1551,7 @@ renderTermTabs();
 renderCourseRows();
 recalcTranscript();
 renderSimSelectors();
+initAutoBackup();
 </script>
 </body>
 </html>
